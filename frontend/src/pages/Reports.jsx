@@ -1,5 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import api from '../services/api';
+import api from '@/services/api';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Search, RotateCcw, Filter } from 'lucide-react';
 
 const Reports = () => {
   const [data, setData] = useState({ tickets: [], summary: {}, categoryStats: [], categories: [] });
@@ -10,6 +24,7 @@ const Reports = () => {
 
   const fetchReports = async () => {
     try {
+      setLoading(true);
       const queryParams = new URLSearchParams(filters).toString();
       const res = await api.get(`/reports?${queryParams}`);
       setData(res.data);
@@ -22,7 +37,7 @@ const Reports = () => {
 
   useEffect(() => {
     fetchReports();
-  }, []); // Initial load
+  }, []);
 
   const handleFilter = (e) => {
     e.preventDefault();
@@ -31,99 +46,173 @@ const Reports = () => {
 
   const handleReset = () => {
     setFilters({ search: '', status: '', priority: '', category_id: '', date_from: '', date_to: '' });
+    setTimeout(() => fetchReports(), 0);
   };
 
-  const { tickets, summary, categoryStats, categories } = data;
+  const { tickets, summary, categories } = data;
+
+  const getStatusBadgeVariant = (status) => {
+    switch (status) {
+      case 'open': return 'secondary';
+      case 'in_progress': return 'warning';
+      case 'resolved': return 'success';
+      case 'rejected': return 'destructive';
+      default: return 'outline';
+    }
+  };
 
   return (
-    <div>
-      <h2 style={{ marginBottom: '24px', fontSize: '24px', fontWeight: 600 }}>Laporan Tiket</h2>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '24px' }}>
-        <div className="card"><div className="card-body"><h3>Total</h3><p style={{ fontSize: '24px', fontWeight: 'bold' }}>{summary.total || 0}</p></div></div>
-        <div className="card"><div className="card-body"><h3>Open</h3><p style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--warning-color)' }}>{summary.open || 0}</p></div></div>
-        <div className="card"><div className="card-body"><h3>In Progress</h3><p style={{ fontSize: '24px', fontWeight: 'bold', color: '#92400e' }}>{summary.in_progress || 0}</p></div></div>
-        <div className="card"><div className="card-body"><h3>Resolved</h3><p style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--success-color)' }}>{summary.resolved || 0}</p></div></div>
-        <div className="card"><div className="card-body"><h3>Rejected</h3><p style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--danger-color)' }}>{summary.rejected || 0}</p></div></div>
+    <div className="space-y-6">
+      {/* Summary Row */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <MetricSmall title="Total" value={summary.total} />
+        <MetricSmall title="Open" value={summary.open} color="text-foreground" />
+        <MetricSmall title="Progress" value={summary.in_progress} color="text-amber-600" />
+        <MetricSmall title="Resolved" value={summary.resolved} color="text-emerald-600" />
+        <MetricSmall title="Rejected" value={summary.rejected} color="text-destructive" />
       </div>
 
-      <div className="card" style={{ marginBottom: '24px' }}>
-        <div className="card-body">
-          <form onSubmit={handleFilter} style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-            <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: '150px' }}>
-              <label className="form-label">Cari</label>
-              <input type="text" className="form-control" value={filters.search} onChange={e => setFilters({...filters, search: e.target.value})} />
+      {/* Filter Toolbar */}
+      <Card className="border-border shadow-sm rounded-xl overflow-hidden">
+        <CardContent className="p-4 bg-muted/20">
+          <form onSubmit={handleFilter} className="flex flex-wrap items-end gap-4">
+            <div className="flex-1 min-w-[150px] space-y-1">
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground ml-1">Pencarian</label>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input 
+                  className="h-8 text-xs bg-background pl-8" 
+                  placeholder="Cari judul atau ID..." 
+                  value={filters.search} 
+                  onChange={e => setFilters({...filters, search: e.target.value})} 
+                />
+              </div>
             </div>
-            <div className="form-group" style={{ marginBottom: 0, width: '120px' }}>
-              <label className="form-label">Status</label>
-              <select className="form-control" value={filters.status} onChange={e => setFilters({...filters, status: e.target.value})}>
-                <option value="">Semua</option>
-                <option value="open">Open</option>
-                <option value="in_progress">In Progress</option>
-                <option value="resolved">Resolved</option>
-                <option value="rejected">Rejected</option>
-              </select>
+            <div className="w-[110px] space-y-1">
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground ml-1">Status</label>
+              <Select value={filters.status} onValueChange={v => setFilters({...filters, status: v})}>
+                <SelectTrigger className="h-8 text-xs bg-background">
+                  <SelectValue placeholder="Semua" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua</SelectItem>
+                  <SelectItem value="open">Open</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="resolved">Resolved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div className="form-group" style={{ marginBottom: 0, width: '150px' }}>
-              <label className="form-label">Kategori</label>
-              <select className="form-control" value={filters.category_id} onChange={e => setFilters({...filters, category_id: e.target.value})}>
-                <option value="">Semua</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+            <div className="w-[130px] space-y-1">
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground ml-1">Kategori</label>
+              <Select value={filters.category_id} onValueChange={v => setFilters({...filters, category_id: v})}>
+                <SelectTrigger className="h-8 text-xs bg-background">
+                  <SelectValue placeholder="Semua" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua</SelectItem>
+                  {Array.isArray(categories) && categories.map(c => <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="form-group" style={{ marginBottom: 0, width: '140px' }}>
-              <label className="form-label">Dari Tanggal</label>
-              <input type="date" className="form-control" value={filters.date_from} onChange={e => setFilters({...filters, date_from: e.target.value})} />
+            <div className="w-[125px] space-y-1">
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground ml-1">Dari</label>
+              <Input 
+                type="date" 
+                className="h-8 text-xs bg-background px-2" 
+                value={filters.date_from} 
+                onChange={e => setFilters({...filters, date_from: e.target.value})} 
+              />
             </div>
-            <div className="form-group" style={{ marginBottom: 0, width: '140px' }}>
-              <label className="form-label">Sampai Tanggal</label>
-              <input type="date" className="form-control" value={filters.date_to} onChange={e => setFilters({...filters, date_to: e.target.value})} />
+            <div className="w-[125px] space-y-1">
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground ml-1">Sampai</label>
+              <Input 
+                type="date" 
+                className="h-8 text-xs bg-background px-2" 
+                value={filters.date_to} 
+                onChange={e => setFilters({...filters, date_to: e.target.value})} 
+              />
             </div>
-            <button type="submit" className="btn btn-primary">Filter</button>
-            <button type="button" className="btn btn-outline" onClick={handleReset}>Reset</button>
+            <div className="flex gap-2">
+              <Button type="submit" size="sm" className="h-8 px-3 text-xs">
+                <Filter className="h-3 w-3 mr-1.5" /> Filter
+              </Button>
+              <Button type="button" variant="outline" size="sm" className="h-8 px-3 text-xs" onClick={handleReset}>
+                <RotateCcw className="h-3 w-3 mr-1.5" /> Reset
+              </Button>
+            </div>
           </form>
-        </div>
-      </div>
+        </CardContent>
 
-      <div className="card">
-        <div className="table-container">
-          {loading ? (
-            <div style={{ padding: '24px', textAlign: 'center' }}>Loading...</div>
-          ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Tiket</th>
-                  <th>Status</th>
-                  <th>Kategori</th>
-                  <th>Pemohon</th>
-                  <th>Teknisi</th>
-                  <th>Tanggal</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tickets.map(t => (
-                  <tr key={t.id}>
-                    <td><strong>#{t.id}</strong> {t.title}</td>
-                    <td><span className={`badge badge-${t.status}`}>{t.status}</span></td>
-                    <td>{t.category_name}</td>
-                    <td>{t.requester_name} ({t.requester_dept})</td>
-                    <td>{t.technician_name || '-'}</td>
-                    <td>{new Date(t.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-                {tickets.length === 0 && (
-                  <tr>
-                    <td colSpan="6" style={{ textAlign: 'center' }}>Data tidak ditemukan</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          )}
+        {/* Data Table */}
+        <div className="p-0 border-t border-border">
+          <Table>
+            <TableHeader className="bg-muted/50">
+              <TableRow className="hover:bg-transparent border-none">
+                <TableHead className="h-9 py-2 text-xs font-medium">Tiket</TableHead>
+                <TableHead className="h-9 py-2 text-xs font-medium">Status</TableHead>
+                <TableHead className="h-9 py-2 text-xs font-medium">Kategori</TableHead>
+                <TableHead className="h-9 py-2 text-xs font-medium">Pemohon</TableHead>
+                <TableHead className="h-9 py-2 text-xs font-medium">Teknisi</TableHead>
+                <TableHead className="h-9 py-2 text-xs font-medium">Tanggal</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground text-sm">
+                    Memuat laporan...
+                  </TableCell>
+                </TableRow>
+              ) : (!Array.isArray(tickets) || tickets.length === 0) ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground text-sm">
+                    Data tidak ditemukan
+                  </TableCell>
+                </TableRow>
+              ) : (
+                tickets.map(t => (
+                  <TableRow key={t.id} className="border-border group">
+                    <TableCell className="py-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-muted-foreground w-6">#{t.id}</span>
+                        <span className="font-medium text-sm text-foreground truncate max-w-[180px]" title={t.title}>{t.title}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-2.5">
+                      <Badge variant={getStatusBadgeVariant(t.status)} className="uppercase text-[9px] tracking-wider font-semibold">
+                        {t.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="py-2.5 text-xs text-muted-foreground">{t.category_name}</TableCell>
+                    <TableCell className="py-2.5">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-medium">{t.requester_name}</span>
+                        <span className="text-[10px] text-muted-foreground uppercase">{t.requester_dept || '-'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-2.5 text-xs text-muted-foreground">{t.technician_name || '-'}</TableCell>
+                    <TableCell className="py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                      {new Date(t.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };
+
+const MetricSmall = ({ title, value, color = "text-foreground" }) => (
+  <Card className="border-border shadow-sm rounded-xl">
+    <CardContent className="p-4 flex flex-col items-center justify-center text-center space-y-1">
+      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{title}</span>
+      <span className={cn("text-xl font-bold tracking-tight", color)}>{value || 0}</span>
+    </CardContent>
+  </Card>
+);
 
 export default Reports;

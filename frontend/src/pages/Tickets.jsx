@@ -1,19 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../services/api';
-import { Plus, Search } from 'lucide-react';
-import { useAuth } from '../utils/AuthContext';
+import api from '@/services/api';
+import { Plus, Search, SlidersHorizontal, MoreHorizontal } from 'lucide-react';
+import { useAuth } from '@/utils/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const Tickets = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState('all');
   const { user } = useAuth();
 
   const fetchTickets = async () => {
     try {
-      const res = await api.get(`/tickets?search=${search}&status=${status}`);
+      const statusQuery = status === 'all' ? '' : status;
+      const res = await api.get(`/tickets?search=${search}&status=${statusQuery}`);
       setTickets(res.data.tickets || []);
     } catch (err) {
       console.error(err);
@@ -26,88 +41,133 @@ const Tickets = () => {
     fetchTickets();
   }, [search, status]);
 
-  return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 600 }}>Daftar Tiket</h2>
-        {user?.role !== 'teknisi' && (
-          <Link to="/tickets/create" className="btn btn-primary">
-            <Plus size={18} /> Buat Tiket
-          </Link>
-        )}
-      </div>
+  const getStatusBadgeVariant = (status) => {
+    switch (status) {
+      case 'open': return 'secondary';
+      case 'in_progress': return 'warning';
+      case 'resolved': return 'success';
+      case 'rejected': return 'destructive';
+      default: return 'outline';
+    }
+  };
 
-      <div className="card">
-        <div className="card-header" style={{ display: 'flex', gap: '16px' }}>
-          <div style={{ position: 'relative', flex: 1, maxWidth: '300px' }}>
-            <Search size={18} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            <input 
-              type="text" 
-              placeholder="Cari tiket..." 
-              className="form-control" 
-              style={{ paddingLeft: '36px' }}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+  return (
+    <div className="space-y-6">
+      <Card className="border-border shadow-sm rounded-xl overflow-hidden">
+        <CardHeader className="p-4 border-b border-border bg-muted/20">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <CardTitle className="text-lg font-semibold tracking-tight">Data Tiket</CardTitle>
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Cari tiket..."
+                  className="pl-9 h-9 w-[180px] lg:w-[250px] bg-background text-sm"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <div className="w-[140px]">
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger className="h-9 bg-background text-sm">
+                    <div className="flex items-center gap-2">
+                      <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+                      <SelectValue placeholder="Status" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua Status</SelectItem>
+                    <SelectItem value="open">Open</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="resolved">Resolved</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {user?.role !== 'teknisi' && (
+                <Button size="sm" className="h-9" asChild>
+                  <Link to="/tickets/create">
+                    <Plus className="h-4 w-4 mr-2" /> Buat Tiket
+                  </Link>
+                </Button>
+              )}
+            </div>
           </div>
-          <select 
-            className="form-control" 
-            style={{ width: '150px' }}
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option value="">Semua Status</option>
-            <option value="open">Open</option>
-            <option value="in_progress">In Progress</option>
-            <option value="resolved">Resolved</option>
-            <option value="rejected">Rejected</option>
-          </select>
-        </div>
-        <div className="table-container">
-          {loading ? (
-            <div style={{ padding: '24px', textAlign: 'center' }}>Loading...</div>
-          ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Judul</th>
-                  <th>Status</th>
-                  <th>Prioritas</th>
-                  <th>Kategori</th>
-                  {user?.role !== 'karyawan' && <th>Pemohon</th>}
-                  {user?.role !== 'teknisi' && <th>Teknisi</th>}
-                  <th>Tanggal</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tickets.length === 0 ? (
-                  <tr>
-                    <td colSpan="8" style={{ textAlign: 'center', padding: '24px' }}>Tidak ada tiket ditemukan</td>
-                  </tr>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="w-[80px] h-9 py-2 text-xs font-medium">ID</TableHead>
+                  <TableHead className="h-9 py-2 text-xs font-medium">Judul</TableHead>
+                  <TableHead className="h-9 py-2 text-xs font-medium">Status</TableHead>
+                  <TableHead className="h-9 py-2 text-xs font-medium">Prioritas</TableHead>
+                  <TableHead className="h-9 py-2 text-xs font-medium">Kategori</TableHead>
+                  {user?.role !== 'karyawan' && <TableHead className="h-9 py-2 text-xs font-medium">Pemohon</TableHead>}
+                  {user?.role !== 'teknisi' && <TableHead className="h-9 py-2 text-xs font-medium">Teknisi</TableHead>}
+                  <TableHead className="h-9 py-2 text-xs font-medium">Tanggal</TableHead>
+                  <TableHead className="w-[50px] h-9 py-2 text-xs font-medium text-right"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="h-24 text-center text-muted-foreground text-sm">
+                      Memuat data tiket...
+                    </TableCell>
+                  </TableRow>
+                ) : (!Array.isArray(tickets) || tickets.length === 0) ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="h-24 text-center text-muted-foreground text-sm">
+                      Tidak ada tiket yang ditemukan.
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   tickets.map(ticket => (
-                    <tr key={ticket.id}>
-                      <td style={{ fontWeight: 500 }}>{ticket.title}</td>
-                      <td><span className={`badge badge-${ticket.status}`}>{ticket.status}</span></td>
-                      <td>{ticket.priority}</td>
-                      <td>{ticket.category}</td>
-                      {user?.role !== 'karyawan' && <td>{ticket.requester}</td>}
-                      {user?.role !== 'teknisi' && <td>{ticket.technician || '-'}</td>}
-                      <td>{new Date(ticket.created_at).toLocaleDateString()}</td>
-                      <td>
-                        <Link to={`/tickets/${ticket.id}`} className="btn btn-outline" style={{ padding: '4px 8px', fontSize: '12px' }}>
-                          Detail
-                        </Link>
-                      </td>
-                    </tr>
+                    <TableRow key={ticket.id} className="border-border group">
+                      <TableCell className="py-2.5 text-xs text-muted-foreground">#{ticket.id}</TableCell>
+                      <TableCell className="py-2.5 font-medium max-w-[250px] truncate text-sm text-foreground" title={ticket.title}>{ticket.title}</TableCell>
+                      <TableCell className="py-2.5">
+                        <Badge variant={getStatusBadgeVariant(ticket.status)} className="uppercase text-[9px] tracking-wider font-semibold">
+                          {ticket.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="py-2.5">
+                        <Badge variant="outline" className="capitalize text-[10px] font-normal tracking-wide text-muted-foreground">
+                          {ticket.priority}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="py-2.5 text-xs text-muted-foreground">{ticket.category}</TableCell>
+                      {user?.role !== 'karyawan' && <TableCell className="py-2.5 text-xs text-foreground">{ticket.requester}</TableCell>}
+                      {user?.role !== 'teknisi' && <TableCell className="py-2.5 text-xs text-muted-foreground">{ticket.technician || '-'}</TableCell>}
+                      <TableCell className="py-2.5 text-xs text-muted-foreground whitespace-nowrap">
+                        {new Date(ticket.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </TableCell>
+                      <TableCell className="py-2.5 text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity">
+                              <span className="sr-only">Buka menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <Link to={`/tickets/${ticket.id}`}>Lihat Detail</Link>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

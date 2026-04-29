@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
+import { useNavigate, Link } from 'react-router-dom';
+import api from '@/services/api';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft } from 'lucide-react';
 
 const CreateTicket = () => {
   const [categories, setCategories] = useState([]);
@@ -30,6 +37,10 @@ const CreateTicket = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleSelectChange = (name, value) => {
+    setFormData({ ...formData, [name]: value });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -39,97 +50,120 @@ const CreateTicket = () => {
     } catch (err) {
       console.error(err);
       alert('Gagal membuat tiket');
-    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div>
-      <h2 style={{ marginBottom: '24px', fontSize: '24px', fontWeight: 600 }}>Buat Tiket Baru</h2>
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="icon" asChild>
+          <Link to="/tickets"><ArrowLeft className="h-4 w-4" /></Link>
+        </Button>
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Buat Tiket Baru</h2>
+          <p className="text-sm text-muted-foreground mt-1">Isi detail kendala IT yang Anda alami.</p>
+        </div>
+      </div>
       
-      <div className="card" style={{ maxWidth: '600px' }}>
-        <div className="card-body">
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label className="form-label">Judul Tiket <span style={{ color: 'var(--danger-color)' }}>*</span></label>
-              <input 
-                type="text" 
+      <Card className="max-w-2xl border-border shadow-sm">
+        <CardHeader>
+          <CardTitle>Form Tiket Bantuan</CardTitle>
+          <CardDescription>
+            Pastikan memberikan deskripsi yang jelas agar teknisi dapat menangani dengan cepat.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="title">Judul Tiket <span className="text-destructive">*</span></Label>
+              <Input 
+                id="title"
                 name="title"
-                className="form-control" 
                 value={formData.title} 
                 onChange={handleChange} 
+                placeholder="Misal: Printer Error di Lantai 3"
                 required 
               />
             </div>
             
-            <div className="form-group">
-              <label className="form-label">Kategori <span style={{ color: 'var(--danger-color)' }}>*</span></label>
-              <select 
-                name="category_id"
-                className="form-control" 
-                value={formData.category_id} 
-                onChange={handleChange}
-                required
-              >
-                <option value="">-- Pilih Kategori --</option>
-                {categories.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <Label htmlFor="category_id">Kategori <span className="text-destructive">*</span></Label>
+                <Select 
+                  name="category_id"
+                  value={formData.category_id} 
+                  onValueChange={(val) => handleSelectChange('category_id', val)}
+                  required
+                >
+                  <SelectTrigger id="category_id">
+                    <SelectValue placeholder="-- Pilih Kategori --" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(c => (
+                      <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="priority">Prioritas <span className="text-destructive">*</span></Label>
+                <Select 
+                  name="priority"
+                  value={formData.priority} 
+                  onValueChange={(val) => handleSelectChange('priority', val)}
+                  required
+                >
+                  <SelectTrigger id="priority">
+                    <SelectValue placeholder="Pilih Prioritas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="critical">Critical</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Prioritas <span style={{ color: 'var(--danger-color)' }}>*</span></label>
-              <select 
-                name="priority"
-                className="form-control" 
-                value={formData.priority} 
-                onChange={handleChange}
-                required
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="critical">Critical</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Lokasi / Ruangan</label>
-              <input 
-                type="text" 
+            <div className="space-y-2">
+              <Label htmlFor="location">Lokasi / Ruangan</Label>
+              <Input 
+                id="location"
                 name="location"
-                className="form-control" 
                 value={formData.location} 
                 onChange={handleChange} 
                 placeholder="Misal: Ruang Meeting Lantai 2"
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Deskripsi Kendala <span style={{ color: 'var(--danger-color)' }}>*</span></label>
-              <textarea 
+            <div className="space-y-2">
+              <Label htmlFor="description">Deskripsi Kendala <span className="text-destructive">*</span></Label>
+              <Textarea 
+                id="description"
                 name="description"
-                className="form-control" 
-                rows="5"
+                rows={5}
                 value={formData.description} 
                 onChange={handleChange} 
+                placeholder="Jelaskan detail kendala yang dialami secara rinci..."
                 required 
-              ></textarea>
+                className="resize-y"
+              />
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-              <button type="submit" className="btn btn-primary" disabled={loading}>
+            <div className="flex gap-3 pt-4 border-t border-border">
+              <Button type="submit" disabled={loading}>
                 {loading ? 'Menyimpan...' : 'Kirim Tiket'}
-              </button>
-              <button type="button" className="btn btn-outline" onClick={() => navigate('/tickets')}>
+              </Button>
+              <Button type="button" variant="outline" onClick={() => navigate('/tickets')}>
                 Batal
-              </button>
+              </Button>
             </div>
           </form>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

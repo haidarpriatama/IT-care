@@ -1,13 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import api from '../services/api';
+import api from '@/services/api';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Search, MoreHorizontal } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  const [search, setSearch] = useState('');
 
   const fetchUsers = async () => {
     try {
@@ -20,54 +31,124 @@ const Users = () => {
     }
   };
 
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
   const handleDelete = async (id) => {
-    if (!window.confirm('Yakin ingin menghapus user ini?')) return;
+    if (!window.confirm('Yakin ingin menghapus pengguna ini?')) return;
     try {
       await api.delete(`/users/${id}`);
       fetchUsers();
     } catch (err) {
-      alert(err.response?.data?.error || 'Gagal menghapus user');
+      alert(err.response?.data?.error || 'Gagal menghapus pengguna');
+    }
+  };
+
+  const filteredUsers = users.filter(u => 
+    u.name.toLowerCase().includes(search.toLowerCase()) || 
+    u.email.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const getRoleBadgeVariant = (role) => {
+    switch (role) {
+      case 'admin': return 'destructive';
+      case 'teknisi': return 'default';
+      default: return 'secondary';
     }
   };
 
   return (
-    <div>
-      <h2 style={{ marginBottom: '24px', fontSize: '24px', fontWeight: 600 }}>Manajemen Users</h2>
-      <div className="card">
-        <div className="table-container">
-          {loading ? (
-            <div style={{ padding: '24px', textAlign: 'center' }}>Loading...</div>
-          ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Nama</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Departemen</th>
-                  <th>Telepon</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map(u => (
-                  <tr key={u.id}>
-                    <td style={{ fontWeight: 500 }}>{u.name}</td>
-                    <td>{u.email}</td>
-                    <td><span className="badge badge-open">{u.role}</span></td>
-                    <td>{u.department || '-'}</td>
-                    <td>{u.phone || '-'}</td>
-                    <td>
-                      <button className="btn btn-outline" style={{ padding: '4px 8px', fontSize: '12px', marginRight: '8px' }}>Edit</button>
-                      <button className="btn btn-danger" style={{ padding: '4px 8px', fontSize: '12px' }} onClick={() => handleDelete(u.id)}>Hapus</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
+    <div className="space-y-6">
+      <Card className="border-border shadow-sm rounded-xl overflow-hidden">
+        <CardHeader className="p-4 border-b border-border bg-muted/20">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <CardTitle className="text-lg font-semibold tracking-tight">Manajemen Pengguna</CardTitle>
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Cari nama atau email..."
+                  className="pl-9 h-9 w-[200px] lg:w-[250px] bg-background text-sm"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <Button size="sm" className="h-9">Tambah User</Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-muted/50">
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="h-9 py-2 text-xs font-medium">Nama</TableHead>
+                  <TableHead className="h-9 py-2 text-xs font-medium">Email</TableHead>
+                  <TableHead className="h-9 py-2 text-xs font-medium">Role</TableHead>
+                  <TableHead className="h-9 py-2 text-xs font-medium">Departemen</TableHead>
+                  <TableHead className="h-9 py-2 text-xs font-medium">Telepon</TableHead>
+                  <TableHead className="w-[50px] h-9 py-2 text-xs font-medium text-right"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center text-muted-foreground text-sm">
+                      Memuat data pengguna...
+                    </TableCell>
+                  </TableRow>
+                ) : (!Array.isArray(filteredUsers) || filteredUsers.length === 0) ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center text-muted-foreground text-sm">
+                      Pengguna tidak ditemukan.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredUsers.map(u => (
+                    <TableRow key={u.id} className="border-border group">
+                      <TableCell className="py-2.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
+                            {u.name ? u.name.charAt(0).toUpperCase() : 'U'}
+                          </div>
+                          <span className="font-medium text-sm text-foreground">{u.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-2.5 text-xs text-muted-foreground">{u.email}</TableCell>
+                      <TableCell className="py-2.5">
+                        <Badge variant={getRoleBadgeVariant(u.role)} className="uppercase text-[9px] tracking-wider font-semibold">
+                          {u.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="py-2.5 text-xs text-muted-foreground">{u.department || '-'}</TableCell>
+                      <TableCell className="py-2.5 text-xs text-muted-foreground">{u.phone || '-'}</TableCell>
+                      <TableCell className="py-2.5 text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity">
+                              <span className="sr-only">Buka menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>Edit Pengguna</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleDelete(u.id)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                              Hapus
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import api from '../services/api';
-import { useAuth } from '../utils/AuthContext';
-import { Trash2, Edit } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import api from '@/services/api';
+import { useAuth } from '@/utils/AuthContext';
+import { Trash2, ArrowLeft, Send } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 
 const TicketDetail = () => {
   const { id } = useParams();
@@ -21,7 +28,7 @@ const TicketDetail = () => {
       const res = await api.get(`/tickets/${id}`);
       setData(res.data);
       setStatus(res.data.ticket.status);
-      setTechnicianId(res.data.ticket.technician_id || '');
+      setTechnicianId(res.data.ticket.technician_id || 'unassigned');
     } catch (err) {
       console.error(err);
       navigate('/tickets');
@@ -36,7 +43,13 @@ const TicketDetail = () => {
 
   const handleUpdateStatus = async () => {
     try {
-      await api.put(`/tickets/${id}`, { status, technician_id: technicianId });
+      const payload = { status };
+      if (technicianId !== 'unassigned') {
+        payload.technician_id = technicianId;
+      } else {
+        payload.technician_id = null;
+      }
+      await api.put(`/tickets/${id}`, payload);
       fetchTicket();
     } catch (err) {
       console.error(err);
@@ -67,139 +80,215 @@ const TicketDetail = () => {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (!data) return <div>Ticket not found</div>;
+  const getStatusBadgeVariant = (status) => {
+    switch (status) {
+      case 'open': return 'secondary';
+      case 'in_progress': return 'warning';
+      case 'resolved': return 'success';
+      case 'rejected': return 'destructive';
+      default: return 'outline';
+    }
+  };
+
+  if (loading) return <div className="p-8 text-center text-muted-foreground">Memuat detail tiket...</div>;
+  if (!data) return <div className="p-8 text-center text-muted-foreground">Ticket tidak ditemukan.</div>;
 
   const { ticket, notes, logs, technicians } = data;
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: 600 }}>Tiket #{ticket.id}: {ticket.title}</h2>
-        <div style={{ display: 'flex', gap: '8px' }}>
+    <div className="space-y-6 max-w-6xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="icon" asChild>
+            <Link to="/tickets"><ArrowLeft className="h-4 w-4" /></Link>
+          </Button>
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">#{ticket.id} - {ticket.title}</h2>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-sm text-muted-foreground">Oleh {ticket.requester_name}</span>
+              <span className="text-muted-foreground text-xs">•</span>
+              <span className="text-sm text-muted-foreground">{new Date(ticket.created_at).toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2">
           {/* Admin / Karyawan can edit/delete if allowed */}
           {(user?.role === 'admin' || (user?.role === 'karyawan' && ticket.status === 'open')) && (
-            <>
-              {/* Note: Edit feature can be a separate page or modal, keeping it simple here */}
-              <button className="btn btn-danger" onClick={handleDelete}>
-                <Trash2 size={16} /> Hapus
-              </button>
-            </>
+            <Button variant="destructive" onClick={handleDelete}>
+              <Trash2 className="h-4 w-4 mr-2" /> Hapus Tiket
+            </Button>
           )}
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Detail Informasi</h3>
-            </div>
-            <div className="card-body">
-              <p><strong>Deskripsi:</strong><br />{ticket.description}</p>
-              <hr style={{ margin: '16px 0', border: 'none', borderTop: '1px solid var(--border-color)' }}/>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div><strong>Kategori:</strong> {ticket.category_name}</div>
-                <div><strong>Prioritas:</strong> {ticket.priority}</div>
-                <div><strong>Lokasi:</strong> {ticket.location || '-'}</div>
-                <div><strong>Tanggal:</strong> {new Date(ticket.created_at).toLocaleString()}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Catatan</h3>
-            </div>
-            <div className="card-body">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '16px' }}>
-                {notes.map(note => (
-                  <div key={note.id} style={{ padding: '12px', backgroundColor: '#f8fafc', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '12px', color: 'var(--text-muted)' }}>
-                      <strong>{note.author_name} ({note.author_role})</strong>
-                      <span>{new Date(note.created_at).toLocaleString()}</span>
-                    </div>
-                    <div style={{ fontSize: '14px' }}>{note.note}</div>
-                  </div>
-                ))}
-                {notes.length === 0 && <div style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Belum ada catatan.</div>}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="border-border shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg">Detail Informasi</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label className="text-muted-foreground text-xs uppercase tracking-wider mb-1 block">Deskripsi Kendala</Label>
+                <div className="text-sm p-4 bg-muted/30 rounded-md border border-border whitespace-pre-wrap">
+                  {ticket.description}
+                </div>
               </div>
               
-              <form onSubmit={handleAddNote}>
-                <div className="form-group">
-                  <textarea 
-                    className="form-control" 
-                    rows="3" 
-                    placeholder="Tambah catatan..."
-                    value={noteText}
-                    onChange={(e) => setNoteText(e.target.value)}
-                    required
-                  ></textarea>
+              <Separator />
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+                <div>
+                  <Label className="text-muted-foreground text-xs block mb-1">Kategori</Label>
+                  <span className="text-sm font-medium">{ticket.category_name}</span>
                 </div>
-                <button type="submit" className="btn btn-primary">Kirim Catatan</button>
+                <div>
+                  <Label className="text-muted-foreground text-xs block mb-1">Prioritas</Label>
+                  <Badge variant="outline" className="capitalize text-[10px] font-normal tracking-wide">
+                    {ticket.priority}
+                  </Badge>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground text-xs block mb-1">Lokasi</Label>
+                  <span className="text-sm font-medium">{ticket.location || '-'}</span>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground text-xs block mb-1">Departemen</Label>
+                  <span className="text-sm font-medium">{ticket.department || '-'}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg">Catatan & Komunikasi</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 mb-6">
+                {notes.length === 0 ? (
+                  <div className="text-center p-4 border border-dashed rounded-md text-muted-foreground text-sm">
+                    Belum ada catatan.
+                  </div>
+                ) : (
+                  notes.map(note => (
+                    <div key={note.id} className="p-3 bg-muted/50 rounded-md border border-border">
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center gap-2">
+                          <strong className="text-sm">{note.author_name}</strong>
+                          <Badge variant="outline" className="text-[10px] uppercase font-normal">{note.author_role}</Badge>
+                        </div>
+                        <span className="text-xs text-muted-foreground">{new Date(note.created_at).toLocaleString()}</span>
+                      </div>
+                      <div className="text-sm whitespace-pre-wrap">{note.note}</div>
+                    </div>
+                  ))
+                )}
+              </div>
+              
+              <form onSubmit={handleAddNote} className="space-y-3">
+                <Label htmlFor="note">Tambahkan Catatan Baru</Label>
+                <Textarea 
+                  id="note"
+                  rows={3}
+                  placeholder="Ketik catatan atau pembaruan di sini..."
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                  required
+                  className="resize-y"
+                />
+                <Button type="submit" size="sm" className="w-full sm:w-auto">
+                  <Send className="h-4 w-4 mr-2" /> Kirim Catatan
+                </Button>
               </form>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Status</h3>
-            </div>
-            <div className="card-body">
-              <div style={{ marginBottom: '16px' }}>
-                <span className={`badge badge-${ticket.status}`} style={{ fontSize: '14px', padding: '4px 12px' }}>
-                  {ticket.status.toUpperCase()}
-                </span>
+        <div className="space-y-6">
+          <Card className="border-border shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg">Status Tiket</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label className="text-muted-foreground text-xs block mb-2">Status Saat Ini</Label>
+                <Badge variant={getStatusBadgeVariant(ticket.status)} className="uppercase text-xs py-1 px-3 tracking-wider">
+                  {ticket.status}
+                </Badge>
+              </div>
+
+              <div>
+                <Label className="text-muted-foreground text-xs block mb-2">Teknisi Penanggung Jawab</Label>
+                <div className="text-sm font-medium">{ticket.technician_name || 'Belum ditugaskan'}</div>
               </div>
               
               {(user?.role === 'admin' || user?.role === 'teknisi') && (
-                <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-                  <div className="form-group">
-                    <label className="form-label">Ubah Status</label>
-                    <select className="form-control" value={status} onChange={e => setStatus(e.target.value)}>
-                      <option value="open">Open</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="resolved">Resolved</option>
-                      <option value="rejected">Rejected</option>
-                    </select>
+                <div className="pt-4 border-t border-border space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Ubah Status</Label>
+                    <Select value={status} onValueChange={setStatus}>
+                      <SelectTrigger id="status">
+                        <SelectValue placeholder="Pilih status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="open">Open</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="resolved">Resolved</SelectItem>
+                        <SelectItem value="rejected">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   
                   {user?.role === 'admin' && (
-                    <div className="form-group">
-                      <label className="form-label">Tugaskan Teknisi</label>
-                      <select className="form-control" value={technicianId} onChange={e => setTechnicianId(e.target.value)}>
-                        <option value="">-- Pilih Teknisi --</option>
-                        {technicians.map(t => (
-                          <option key={t.id} value={t.id}>{t.name}</option>
-                        ))}
-                      </select>
+                    <div className="space-y-2">
+                      <Label htmlFor="technician">Tugaskan Teknisi</Label>
+                      <Select value={technicianId} onValueChange={setTechnicianId}>
+                        <SelectTrigger id="technician">
+                          <SelectValue placeholder="-- Pilih Teknisi --" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="unassigned">-- Belum Ditugaskan --</SelectItem>
+                          {technicians.map(t => (
+                            <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   )}
                   
-                  <button className="btn btn-primary" onClick={handleUpdateStatus} style={{ width: '100%' }}>Update</button>
+                  <Button onClick={handleUpdateStatus} className="w-full">
+                    Update Tiket
+                  </Button>
                 </div>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Log Aktivitas</h3>
-            </div>
-            <div className="card-body" style={{ maxHeight: '300px', overflowY: 'auto' }}>
-              <ul style={{ paddingLeft: '20px', fontSize: '13px', color: 'var(--text-muted)' }}>
-                {logs.map(log => (
-                  <li key={log.id} style={{ marginBottom: '8px' }}>
-                    <strong>{log.changed_by_name}</strong> mengubah status menjadi <strong>{log.new_status}</strong><br />
-                    <span style={{ fontSize: '11px' }}>{new Date(log.created_at).toLocaleString()}</span>
-                  </li>
-                ))}
-                {logs.length === 0 && <li>Belum ada aktivitas</li>}
-              </ul>
-            </div>
-          </div>
+          <Card className="border-border shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg">Log Aktivitas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {logs.length === 0 ? (
+                <div className="text-sm text-muted-foreground text-center">Belum ada aktivitas</div>
+              ) : (
+                <div className="space-y-4">
+                  {logs.map(log => (
+                    <div key={log.id} className="relative pl-4 border-l-2 border-muted">
+                      <div className="absolute w-2 h-2 bg-primary rounded-full -left-[5px] top-1"></div>
+                      <p className="text-sm">
+                        <span className="font-medium">{log.changed_by_name}</span> mengubah status ke <Badge variant="outline" className="text-[10px] uppercase ml-1">{log.new_status}</Badge>
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(log.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
