@@ -80,7 +80,7 @@ const getEditUser = async (req, res) => {
       [id]
     );
     if (!result.rows[0]) {
-      req.flash('error', 'User tidak ditemukan.');
+      req.flash('error', 'User tidak dapat ditemukan.');
       return res.redirect('/users');
     }
     res.render('users/edit', {
@@ -120,7 +120,7 @@ const updateUser = async (req, res) => {
   } catch (err) {
     console.error(err);
     if (err.code === '23505') {
-      req.flash('error', 'Email sudah digunakan.');
+      req.flash('error', 'Email telah digunakan.');
     } else {
       req.flash('error', 'Gagal memperbarui user.');
     }
