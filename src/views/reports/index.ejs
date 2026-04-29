@@ -1,122 +1,96 @@
+<%
+  const statusLabel = (value) => ({ open: 'Open', in_progress: 'Dalam proses', resolved: 'Selesai', rejected: 'Ditolak' }[value] || value || '-');
+  const priorityLabel = (value) => ({ high: 'Tinggi', medium: 'Sedang', low: 'Rendah' }[value] || value || '-');
+%>
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %></title>
-  <meta name="description" content="Laporan tiket IT Care Helpdesk dengan analisis lengkap">
+  <meta name="description" content="Laporan operasional IT Care Helpdesk">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
   <%- include('../partials/flash') %>
-  <div class="app-layout">
+  <div class="app-shell">
     <%- include('../partials/sidebar') %>
-    <div class="main-content">
+
+    <div class="app-main">
       <%- include('../partials/navbar') %>
-      <div class="page-content">
 
-        <div class="action-bar">
+      <main class="page-content">
+        <section class="page-header">
           <div>
-            <div class="action-bar-title"><i class="bi bi-bar-chart-line" style="color:var(--accent);"></i> Laporan Helpdesk</div>
-            <div style="font-size:.8rem; color:var(--text-muted);">Data gabungan tickets · users · categories · status_logs</div>
+            <h1>Laporan</h1>
+            <p>Rekap gabungan tiket, user, kategori, dan histori status untuk monitoring operasional helpdesk.</p>
           </div>
-        </div>
+        </section>
 
-        <!-- Summary Stats -->
-        <div class="stats-grid section-gap">
-          <div class="stat-card">
-            <div class="stat-icon purple"><i class="bi bi-ticket-detailed"></i></div>
-            <div class="stat-info">
-              <div class="stat-value"><%= summary.total %></div>
-              <div class="stat-label">Total Tiket</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon blue"><i class="bi bi-envelope-open"></i></div>
-            <div class="stat-info">
-              <div class="stat-value"><%= summary.open %></div>
-              <div class="stat-label">Open</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon orange"><i class="bi bi-gear"></i></div>
-            <div class="stat-info">
-              <div class="stat-value"><%= summary.in_progress %></div>
-              <div class="stat-label">In Progress</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon green"><i class="bi bi-check-circle"></i></div>
-            <div class="stat-info">
-              <div class="stat-value"><%= summary.resolved %></div>
-              <div class="stat-label">Selesai</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon red"><i class="bi bi-x-circle"></i></div>
-            <div class="stat-info">
-              <div class="stat-value"><%= summary.rejected %></div>
-              <div class="stat-label">Ditolak</div>
-            </div>
-          </div>
-        </div>
+        <section class="metric-strip page-section">
+          <div class="metric-card"><p class="metric-label">Total Tiket</p><div class="metric-value"><%= summary.total %></div><div class="metric-meta">Semua tiket aktif</div></div>
+          <div class="metric-card"><p class="metric-label">Open</p><div class="metric-value"><%= summary.open %></div><div class="metric-meta">Menunggu penanganan</div></div>
+          <div class="metric-card"><p class="metric-label">Dalam Proses</p><div class="metric-value"><%= summary.in_progress %></div><div class="metric-meta">Sedang dikerjakan</div></div>
+          <div class="metric-card"><p class="metric-label">Selesai</p><div class="metric-value"><%= summary.resolved %></div><div class="metric-meta">Terselesaikan</div></div>
+          <div class="metric-card"><p class="metric-label">Ditolak</p><div class="metric-value"><%= summary.rejected %></div><div class="metric-meta">Tidak diproses</div></div>
+        </section>
 
-        <!-- Kategori Stats + Filter -->
-        <div style="display:grid; grid-template-columns:1fr 2fr; gap:1.5rem; margin-bottom:1.5rem; align-items:start;">
-
-          <!-- Category Stats -->
-          <div class="card-custom">
+        <div class="analytics-layout page-section">
+          <section class="data-card card-custom">
             <div class="card-header-custom">
-              <div class="card-title-custom"><i class="bi bi-pie-chart"></i> Tiket per Kategori</div>
+              <div>
+                <h2 class="panel-title">Distribusi kategori</h2>
+                <div class="section-subtitle">Volume tiket per kategori aktif.</div>
+              </div>
             </div>
             <div class="card-body-custom">
               <% if (categoryStats.length === 0) { %>
-              <p class="text-muted-sm" style="text-align:center;">Belum ada data.</p>
+              <div class="empty-state compact">
+                <i class="bi bi-bar-chart"></i>
+                <h4>Belum ada data</h4>
+                <p>Kategori akan muncul di sini setelah tiket mulai tercatat.</p>
+              </div>
               <% } else { %>
                 <% const maxCount = Math.max(...categoryStats.map(c => parseInt(c.total) || 0), 1); %>
-                <% categoryStats.forEach(cs => { %>
-                <div style="margin-bottom:1rem;">
-                  <div style="display:flex; justify-content:space-between; margin-bottom:.35rem;">
-                    <span style="font-size:.82rem; font-weight:600;"><%= cs.name %></span>
-                    <span style="font-size:.82rem; color:var(--text-muted); font-weight:700;"><%= cs.total %></span>
-                  </div>
-                  <div style="background:#f1f5f9; border-radius:20px; height:6px; overflow:hidden;">
-                    <div style="background:linear-gradient(90deg,var(--accent),#7c3aed);
-                      height:100%; border-radius:20px;
-                      width:<%= Math.round((parseInt(cs.total)/maxCount)*100) %>%;
-                      transition:width .5s ease;">
+                <div class="progress-list">
+                  <% categoryStats.forEach(cs => { %>
+                  <div class="progress-row">
+                    <div class="progress-head">
+                      <span class="progress-label"><%= cs.name %></span>
+                      <span class="text-muted-sm"><%= cs.total %></span>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill" style="width:<%= Math.round((parseInt(cs.total) / maxCount) * 100) %>%"></div>
                     </div>
                   </div>
+                  <% }) %>
                 </div>
-                <% }) %>
               <% } %>
             </div>
-          </div>
+          </section>
 
-          <!-- Filters -->
-          <div class="card-custom">
+          <section class="form-panel data-card">
             <div class="card-header-custom">
-              <div class="card-title-custom"><i class="bi bi-funnel"></i> Filter Laporan</div>
+              <div>
+                <h2 class="panel-title">Filter laporan</h2>
+                <div class="section-subtitle">Gunakan filter untuk mempersempit data operasional.</div>
+              </div>
               <% if (filters.search || filters.status || filters.priority || filters.category_id || filters.date_from || filters.date_to) { %>
-              <a href="/reports" class="btn-secondary-custom" style="font-size:.8rem; padding:.35rem .75rem;">
-                <i class="bi bi-x-lg"></i> Reset
-              </a>
+              <a href="/reports" class="btn-secondary-app">Reset</a>
               <% } %>
             </div>
             <div class="card-body-custom">
               <form method="GET" action="/reports" id="reportFilterForm">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                <div class="form-grid-2">
                   <div class="form-group">
-                    <label class="form-label-custom">Cari</label>
-                    <input type="text" name="search" class="form-control-custom"
-                      placeholder="Judul, pemohon, departemen..." value="<%= filters.search %>"
-                      id="reportSearch">
+                    <label class="form-label-custom" for="reportSearch">Cari</label>
+                    <input type="text" name="search" id="reportSearch" class="form-control-custom" placeholder="Judul, pemohon, departemen..." value="<%= filters.search %>">
                   </div>
                   <div class="form-group">
-                    <label class="form-label-custom">Kategori</label>
-                    <select name="category_id" class="form-control-custom" id="catFilter">
+                    <label class="form-label-custom" for="catFilter">Kategori</label>
+                    <select name="category_id" id="catFilter" class="form-control-custom">
                       <option value="">Semua Kategori</option>
                       <% categories.forEach(cat => { %>
                       <option value="<%= cat.id %>" <%= filters.category_id == cat.id ? 'selected' : '' %>><%= cat.name %></option>
@@ -124,18 +98,18 @@
                     </select>
                   </div>
                   <div class="form-group">
-                    <label class="form-label-custom">Status</label>
-                    <select name="status" class="form-control-custom" id="reportStatus">
+                    <label class="form-label-custom" for="reportStatus">Status</label>
+                    <select name="status" id="reportStatus" class="form-control-custom">
                       <option value="">Semua Status</option>
                       <option value="open" <%= filters.status === 'open' ? 'selected' : '' %>>Open</option>
-                      <option value="in_progress" <%= filters.status === 'in_progress' ? 'selected' : '' %>>In Progress</option>
+                      <option value="in_progress" <%= filters.status === 'in_progress' ? 'selected' : '' %>>Dalam proses</option>
                       <option value="resolved" <%= filters.status === 'resolved' ? 'selected' : '' %>>Selesai</option>
                       <option value="rejected" <%= filters.status === 'rejected' ? 'selected' : '' %>>Ditolak</option>
                     </select>
                   </div>
                   <div class="form-group">
-                    <label class="form-label-custom">Prioritas</label>
-                    <select name="priority" class="form-control-custom" id="reportPriority">
+                    <label class="form-label-custom" for="reportPriority">Prioritas</label>
+                    <select name="priority" id="reportPriority" class="form-control-custom">
                       <option value="">Semua Prioritas</option>
                       <option value="high" <%= filters.priority === 'high' ? 'selected' : '' %>>Tinggi</option>
                       <option value="medium" <%= filters.priority === 'medium' ? 'selected' : '' %>>Sedang</option>
@@ -143,43 +117,40 @@
                     </select>
                   </div>
                   <div class="form-group">
-                    <label class="form-label-custom">Dari Tanggal</label>
-                    <input type="date" name="date_from" class="form-control-custom" value="<%= filters.date_from %>" id="dateFrom">
+                    <label class="form-label-custom" for="dateFrom">Dari Tanggal</label>
+                    <input type="date" name="date_from" id="dateFrom" class="form-control-custom" value="<%= filters.date_from %>">
                   </div>
                   <div class="form-group">
-                    <label class="form-label-custom">Sampai Tanggal</label>
-                    <input type="date" name="date_to" class="form-control-custom" value="<%= filters.date_to %>" id="dateTo">
+                    <label class="form-label-custom" for="dateTo">Sampai Tanggal</label>
+                    <input type="date" name="date_to" id="dateTo" class="form-control-custom" value="<%= filters.date_to %>">
                   </div>
                 </div>
-                <button type="submit" class="btn-primary-custom">
-                  <i class="bi bi-search"></i> Terapkan Filter
-                </button>
+
+                <div class="form-actions">
+                  <button type="submit" class="btn-primary-app">Terapkan Filter</button>
+                </div>
               </form>
             </div>
-          </div>
+          </section>
         </div>
 
-        <!-- Reports Table (JOIN > 2 tabel) -->
-        <div class="card-custom">
+        <section class="data-card card-custom">
           <div class="card-header-custom">
-            <div class="card-title-custom">
-              <i class="bi bi-table"></i> Data Laporan
-              <span style="font-size:.75rem; background:var(--accent-soft); color:var(--accent); padding:.15rem .5rem; border-radius:10px; margin-left:.5rem;"><%= tickets.length %> tiket</span>
-            </div>
-            <div style="font-size:.75rem; color:var(--text-muted);">
-              <i class="bi bi-info-circle"></i> JOIN: tickets + users + categories + status_logs
+            <div>
+              <h2 class="panel-title">Data Laporan</h2>
+              <div class="section-subtitle"><%= tickets.length %> tiket sesuai filter aktif.</div>
             </div>
           </div>
 
           <% if (tickets.length === 0) { %>
           <div class="empty-state">
-            <i class="bi bi-bar-chart"></i>
+            <i class="bi bi-file-earmark-text"></i>
             <h4>Tidak ada data laporan</h4>
             <p>Tidak ada tiket yang sesuai dengan filter yang dipilih.</p>
           </div>
           <% } else { %>
-          <div style="overflow-x:auto;">
-            <table class="table-custom">
+          <div class="table-wrap">
+            <table class="data-table table-custom">
               <thead>
                 <tr>
                   <th>#ID</th>
@@ -199,57 +170,29 @@
               <tbody>
                 <% tickets.forEach(ticket => { %>
                 <tr>
-                  <td><a href="/tickets/<%= ticket.id %>" style="font-weight:700; color:var(--accent);">#<%= ticket.id %></a></td>
-                  <td>
-                    <a href="/tickets/<%= ticket.id %>" class="ticket-title" style="max-width:200px;">
-                      <%= ticket.title %>
-                    </a>
-                  </td>
-                  <td style="font-size:.85rem;"><%= ticket.requester_name %></td>
+                  <td><a href="/tickets/<%= ticket.id %>" class="id-link">#<%= ticket.id %></a></td>
+                  <td><a href="/tickets/<%= ticket.id %>" class="ticket-title"><%= ticket.title %></a></td>
+                  <td><%= ticket.requester_name %></td>
                   <td class="text-muted-sm"><%= ticket.requester_dept || '-' %></td>
-                  <td>
-                    <% if (ticket.category_name) { %>
-                    <span style="font-size:.8rem; background:#f1f5f9; padding:.2rem .6rem; border-radius:6px; color:var(--text-muted);">
-                      <%= ticket.category_name %>
-                    </span>
-                    <% } else { %><span class="text-muted-sm">-</span><% } %>
-                  </td>
-                  <td style="font-size:.85rem;"><%= ticket.technician_name || '-' %></td>
-                  <td>
-                    <span class="badge-priority badge-<%= ticket.priority %>">
-                      <%= ticket.priority === 'high' ? 'Tinggi' : ticket.priority === 'medium' ? 'Sedang' : 'Rendah' %>
-                    </span>
-                  </td>
-                  <td>
-                    <span class="badge-status badge-<%= ticket.status %>">
-                      <%= ticket.status === 'open' ? 'Open' : ticket.status === 'in_progress' ? 'In Progress' : ticket.status === 'resolved' ? 'Selesai' : 'Ditolak' %>
-                    </span>
-                  </td>
-                  <td>
-                    <% if (ticket.last_status) { %>
-                    <span class="badge-status badge-<%= ticket.last_status %>" style="font-size:.7rem;">
-                      <%= ticket.last_status %>
-                    </span>
-                    <% } else { %><span class="text-muted-sm">-</span><% } %>
-                  </td>
-                  <td style="text-align:center;">
-                    <span style="font-weight:700; color:var(--accent); font-size:.85rem;"><%= ticket.note_count %></span>
-                  </td>
+                  <td><% if (ticket.category_name) { %><span class="chip"><%= ticket.category_name %></span><% } else { %><span class="text-muted-sm">-</span><% } %></td>
+                  <td><%= ticket.technician_name || '-' %></td>
+                  <td><span class="badge-priority badge-<%= ticket.priority %>"><%= priorityLabel(ticket.priority) %></span></td>
+                  <td><span class="badge-status badge-<%= ticket.status %>"><%= statusLabel(ticket.status) %></span></td>
+                  <td><% if (ticket.last_status) { %><span class="badge-status badge-<%= ticket.last_status %>"><%= statusLabel(ticket.last_status) %></span><% } else { %><span class="text-muted-sm">-</span><% } %></td>
+                  <td><%= ticket.note_count %></td>
                   <td class="text-muted-sm"><%= ticket.location || '-' %></td>
-                  <td class="text-muted-sm">
-                    <%= new Date(ticket.created_at).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' }) %>
-                  </td>
+                  <td class="text-muted-sm"><%= new Date(ticket.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) %></td>
                 </tr>
                 <% }) %>
               </tbody>
             </table>
           </div>
           <% } %>
-        </div>
-
-      </div>
+        </section>
+      </main>
     </div>
   </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/app.js"></script>
 </body>

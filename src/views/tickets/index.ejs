@@ -4,101 +4,88 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %></title>
-  <meta name="description" content="Daftar semua tiket IT Care Helpdesk">
+  <meta name="description" content="Daftar tiket IT Care Helpdesk">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
   <%- include('../partials/flash') %>
-  <div class="app-layout">
+  <div class="app-shell">
     <%- include('../partials/sidebar') %>
-    <div class="main-content">
+
+    <div class="app-main">
       <%- include('../partials/navbar') %>
-      <div class="page-content">
 
-        <!-- ── Action Bar ── -->
-        <div class="action-bar">
+      <main class="page-content">
+        <section class="page-header">
           <div>
-            <div class="action-bar-title"><i class="bi bi-ticket-detailed" style="color:var(--accent);"></i> Manajemen Tiket</div>
-            <div style="font-size:.8rem; color:var(--text-muted);">Total: <strong><%= total %></strong> tiket ditemukan</div>
+            <h1>Tiket</h1>
+            <p>Panel kerja utama untuk mencari, memfilter, dan meninjau tiket sesuai akses akun Anda.</p>
+            <div class="page-header-meta">
+              <span class="badge-count"><%= total %> tiket</span>
+            </div>
           </div>
-          <% if (currentUser.role === 'admin' || currentUser.role === 'karyawan') { %>
-          <a href="/tickets/create" class="btn-primary-custom" id="btnCreateTicket">
-            <i class="bi bi-plus-lg"></i> Buat Tiket
-          </a>
-          <% } %>
-        </div>
 
-        <!-- ── Filter Bar ── -->
-        <div class="card-custom section-gap">
-          <div class="card-body-custom" style="padding:1rem 1.5rem;">
-            <form method="GET" action="/tickets" id="filterForm">
-              <div class="filter-bar">
-                <input
-                  type="text"
-                  name="search"
-                  class="search-input"
-                  placeholder="Cari judul, deskripsi, atau nama pemohon..."
-                  value="<%= search %>"
-                  id="searchInput"
-                >
-                <select name="status" id="statusFilter" onchange="this.form.submit()">
-                  <option value="">Semua Status</option>
-                  <option value="open" <%= status === 'open' ? 'selected' : '' %>>Open</option>
-                  <option value="in_progress" <%= status === 'in_progress' ? 'selected' : '' %>>In Progress</option>
-                  <option value="resolved" <%= status === 'resolved' ? 'selected' : '' %>>Selesai</option>
-                  <option value="rejected" <%= status === 'rejected' ? 'selected' : '' %>>Ditolak</option>
-                </select>
-                <select name="priority" id="priorityFilter" onchange="this.form.submit()">
-                  <option value="">Semua Prioritas</option>
-                  <option value="high" <%= priority === 'high' ? 'selected' : '' %>>Tinggi</option>
-                  <option value="medium" <%= priority === 'medium' ? 'selected' : '' %>>Sedang</option>
-                  <option value="low" <%= priority === 'low' ? 'selected' : '' %>>Rendah</option>
-                </select>
-                <button type="submit" class="btn-primary-custom">
-                  <i class="bi bi-search"></i> Cari
-                </button>
-                <% if (search || status || priority) { %>
-                <a href="/tickets" class="btn-secondary-custom">
-                  <i class="bi bi-x-lg"></i> Reset
-                </a>
-                <% } %>
+        </section>
+
+        <section class="data-card card-custom">
+          <div class="toolbar">
+            <form method="GET" action="/tickets" id="filterForm" class="toolbar-search toolbar-search-inline" role="search">
+              <div class="toolbar-search-main">
+                <i class="bi bi-search"></i>
+                <input type="text" name="search" class="toolbar-search-field search-input" placeholder="Cari judul, deskripsi, atau nama pemohon..." value="<%= search %>" id="searchInput">
               </div>
+              <select name="status" id="statusFilter" class="toolbar-select" data-auto-submit>
+                <option value="">Semua Status</option>
+                <option value="open" <%= status === 'open' ? 'selected' : '' %>>Open</option>
+                <option value="in_progress" <%= status === 'in_progress' ? 'selected' : '' %>>Dalam proses</option>
+                <option value="resolved" <%= status === 'resolved' ? 'selected' : '' %>>Selesai</option>
+                <option value="rejected" <%= status === 'rejected' ? 'selected' : '' %>>Ditolak</option>
+              </select>
+              <select name="priority" id="priorityFilter" class="toolbar-select" data-auto-submit>
+                <option value="">Semua Prioritas</option>
+                <option value="high" <%= priority === 'high' ? 'selected' : '' %>>Tinggi</option>
+                <option value="medium" <%= priority === 'medium' ? 'selected' : '' %>>Sedang</option>
+                <option value="low" <%= priority === 'low' ? 'selected' : '' %>>Rendah</option>
+              </select>
+              <button type="submit" class="btn-secondary-app">Cari</button>
+              <% if (search || status || priority) { %>
+              <a href="/tickets" class="btn-secondary-app">Reset</a>
+              <% } %>
             </form>
-          </div>
-        </div>
 
-        <!-- ── Tickets Table ── -->
-        <div class="card-custom">
+            <% if (currentUser.role === 'admin' || currentUser.role === 'karyawan') { %>
+            <div class="toolbar-controls">
+              <a href="/tickets/create" class="btn-primary-app" id="btnCreateTicket">Buat Tiket</a>
+            </div>
+            <% } %>
+          </div>
+
           <% if (tickets.length === 0) { %>
           <div class="empty-state">
             <i class="bi bi-inbox"></i>
             <h4>Tidak ada tiket ditemukan</h4>
             <p>
               <% if (search || status || priority) { %>
-                Coba ubah filter pencarian Anda.
+                Coba ubah filter pencarian Anda untuk melihat hasil lain.
               <% } else if (currentUser.role === 'karyawan') { %>
-                Belum ada tiket. <a href="/tickets/create" style="color:var(--accent);">Buat tiket pertama Anda.</a>
+                Belum ada tiket. <a href="/tickets/create">Buat tiket pertama Anda.</a>
               <% } else { %>
-                Belum ada tiket yang perlu ditangani.
+                Belum ada tiket yang perlu ditangani saat ini.
               <% } %>
             </p>
           </div>
           <% } else { %>
-          <div style="overflow-x:auto;">
-            <table class="table-custom">
+          <div class="table-wrap">
+            <table class="data-table table-custom">
               <thead>
                 <tr>
                   <th>#ID</th>
                   <th>Judul</th>
                   <th>Kategori</th>
-                  <% if (currentUser.role !== 'karyawan') { %>
-                  <th>Pemohon</th>
-                  <% } %>
-                  <% if (currentUser.role === 'admin') { %>
-                  <th>Teknisi</th>
-                  <% } %>
+                  <% if (currentUser.role !== 'karyawan') { %><th>Pemohon</th><% } %>
+                  <% if (currentUser.role === 'admin') { %><th>Teknisi</th><% } %>
                   <th>Prioritas</th>
                   <th>Status</th>
                   <th>Lokasi</th>
@@ -109,60 +96,22 @@
               <tbody>
                 <% tickets.forEach(ticket => { %>
                 <tr>
-                  <td><span style="font-weight:700; color:var(--accent);">#<%= ticket.id %></span></td>
-                  <td>
-                    <a href="/tickets/<%= ticket.id %>" class="ticket-title">
-                      <%= ticket.title %>
-                    </a>
-                  </td>
-                  <td>
-                    <% if (ticket.category) { %>
-                    <span style="font-size:.8rem; background:#f1f5f9; padding:.2rem .6rem; border-radius:6px; color:var(--text-muted);">
-                      <%= ticket.category %>
-                    </span>
-                    <% } else { %><span class="text-muted-sm">-</span><% } %>
-                  </td>
-                  <% if (currentUser.role !== 'karyawan') { %>
-                  <td style="font-size:.85rem;"><%= ticket.requester || '-' %></td>
-                  <% } %>
-                  <% if (currentUser.role === 'admin') { %>
-                  <td style="font-size:.85rem;">
-                    <% if (ticket.technician) { %>
-                    <span><i class="bi bi-person-gear" style="color:var(--accent);"></i> <%= ticket.technician %></span>
-                    <% } else { %>
-                    <span class="text-muted-sm">Belum assign</span>
-                    <% } %>
-                  </td>
-                  <% } %>
-                  <td>
-                    <span class="badge-priority badge-<%= ticket.priority %>">
-                      <%= ticket.priority === 'high' ? 'Tinggi' : ticket.priority === 'medium' ? 'Sedang' : 'Rendah' %>
-                    </span>
-                  </td>
-                  <td>
-                    <span class="badge-status badge-<%= ticket.status %>">
-                      <%= ticket.status === 'open' ? 'Open' : ticket.status === 'in_progress' ? 'In Progress' : ticket.status === 'resolved' ? 'Selesai' : 'Ditolak' %>
-                    </span>
-                  </td>
+                  <td><a class="id-link" href="/tickets/<%= ticket.id %>">#<%= ticket.id %></a></td>
+                  <td><a href="/tickets/<%= ticket.id %>" class="ticket-title"><%= ticket.title %></a></td>
+                  <td><% if (ticket.category) { %><span class="chip"><%= ticket.category %></span><% } else { %><span class="text-muted-sm">-</span><% } %></td>
+                  <% if (currentUser.role !== 'karyawan') { %><td><%= ticket.requester || '-' %></td><% } %>
+                  <% if (currentUser.role === 'admin') { %><td><% if (ticket.technician) { %><span class="chip"><%= ticket.technician %></span><% } else { %><span class="text-muted-sm">Belum ditugaskan</span><% } %></td><% } %>
+                  <td><span class="badge-priority badge-<%= ticket.priority %>"><%= ticket.priority === 'high' ? 'Tinggi' : ticket.priority === 'medium' ? 'Sedang' : 'Rendah' %></span></td>
+                  <td><span class="badge-status badge-<%= ticket.status %>"><%= ticket.status === 'open' ? 'Open' : ticket.status === 'in_progress' ? 'Dalam proses' : ticket.status === 'resolved' ? 'Selesai' : 'Ditolak' %></span></td>
                   <td class="text-muted-sm"><%= ticket.location || '-' %></td>
-                  <td class="text-muted-sm">
-                    <%= new Date(ticket.created_at).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' }) %>
-                  </td>
+                  <td class="text-muted-sm"><%= new Date(ticket.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) %></td>
                   <td>
-                    <div style="display:flex; gap:.35rem;">
-                      <a href="/tickets/<%= ticket.id %>" class="btn-icon" title="Lihat Detail">
-                        <i class="bi bi-eye"></i>
-                      </a>
-                      <% if ((currentUser.role === 'karyawan' && ticket.user_id === currentUser.id && ticket.status === 'open') || currentUser.role === 'admin') { %>
-                      <a href="/tickets/<%= ticket.id %>/edit" class="btn-icon" title="Edit">
-                        <i class="bi bi-pencil"></i>
-                      </a>
-                      <% } %>
-                      <% if ((currentUser.role === 'karyawan' && ticket.user_id === currentUser.id && ticket.status === 'open') || currentUser.role === 'admin') { %>
-                      <form method="POST" action="/tickets/<%= ticket.id %>?_method=DELETE" style="display:inline;" onsubmit="return confirm('Pindahkan tiket ini ke trash?')">
-                        <button type="submit" class="btn-icon danger" title="Hapus">
-                          <i class="bi bi-trash3"></i>
-                        </button>
+                    <div class="table-actions action-inline">
+                      <a href="/tickets/<%= ticket.id %>" class="btn-icon-app" title="Lihat Detail"><i class="bi bi-eye"></i></a>
+                      <% if ((currentUser.role === 'karyawan' && ticket.status === 'open') || currentUser.role === 'admin') { %>
+                      <a href="/tickets/<%= ticket.id %>/edit" class="btn-icon-app" title="Edit"><i class="bi bi-pencil"></i></a>
+                      <form method="POST" action="/tickets/<%= ticket.id %>?_method=DELETE" data-confirm="Pindahkan tiket ini ke trash?">
+                        <button type="submit" class="btn-icon-app danger" title="Hapus"><i class="bi bi-trash3"></i></button>
                       </form>
                       <% } %>
                     </div>
@@ -173,39 +122,31 @@
             </table>
           </div>
 
-          <!-- Pagination -->
           <% if (totalPages > 1) { %>
-          <div style="padding:1.25rem 1.5rem; border-top:1px solid var(--border);">
-            <div class="pagination-custom">
-              <% if (currentPage > 1) { %>
-              <a href="?page=<%= currentPage - 1 %>&search=<%= search %>&status=<%= status %>&priority=<%= priority %>">
-                <i class="bi bi-chevron-left"></i>
-              </a>
-              <% } else { %>
-              <span class="disabled"><i class="bi bi-chevron-left"></i></span>
-              <% } %>
+          <div class="pagination-custom">
+            <% if (currentPage > 1) { %>
+            <a href="?page=<%= currentPage - 1 %>&search=<%= search %>&status=<%= status %>&priority=<%= priority %>"><i class="bi bi-chevron-left"></i></a>
+            <% } else { %>
+            <span class="disabled"><i class="bi bi-chevron-left"></i></span>
+            <% } %>
 
-              <% for (let i = 1; i <= totalPages; i++) { %>
-              <a href="?page=<%= i %>&search=<%= search %>&status=<%= status %>&priority=<%= priority %>"
-                 class="<%= i === currentPage ? 'active' : '' %>"><%= i %></a>
-              <% } %>
+            <% for (let i = 1; i <= totalPages; i++) { %>
+            <a href="?page=<%= i %>&search=<%= search %>&status=<%= status %>&priority=<%= priority %>" class="<%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+            <% } %>
 
-              <% if (currentPage < totalPages) { %>
-              <a href="?page=<%= currentPage + 1 %>&search=<%= search %>&status=<%= status %>&priority=<%= priority %>">
-                <i class="bi bi-chevron-right"></i>
-              </a>
-              <% } else { %>
-              <span class="disabled"><i class="bi bi-chevron-right"></i></span>
-              <% } %>
-            </div>
+            <% if (currentPage < totalPages) { %>
+            <a href="?page=<%= currentPage + 1 %>&search=<%= search %>&status=<%= status %>&priority=<%= priority %>"><i class="bi bi-chevron-right"></i></a>
+            <% } else { %>
+            <span class="disabled"><i class="bi bi-chevron-right"></i></span>
+            <% } %>
           </div>
           <% } %>
           <% } %>
-        </div>
-
-      </div>
+        </section>
+      </main>
     </div>
   </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/app.js"></script>
 </body>

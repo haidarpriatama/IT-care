@@ -1,3 +1,7 @@
+<%
+  const statusLabel = (value) => ({ open: 'Open', in_progress: 'Dalam proses', resolved: 'Selesai', rejected: 'Ditolak' }[value] || value || '-');
+  const priorityLabel = (value) => ({ high: 'Tinggi', medium: 'Sedang', low: 'Rendah' }[value] || value || '-');
+%>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -11,204 +15,154 @@
 </head>
 <body>
   <%- include('../partials/flash') %>
-  <div class="app-layout">
+  <div class="app-shell">
     <%- include('../partials/sidebar') %>
-    <div class="main-content">
-      <%- include('../partials/navbar') %>
-      <div class="page-content">
 
-        <!-- Action Bar -->
-        <div class="action-bar">
+    <div class="app-main">
+      <%- include('../partials/navbar') %>
+
+      <main class="page-content">
+        <section class="page-header">
           <div>
-            <div class="action-bar-title">
-              <i class="bi bi-ticket-detailed" style="color:var(--accent);"></i> Detail Tiket #<%= ticket.id %>
-            </div>
-            <div style="font-size:.8rem; color:var(--text-muted);">
-              Dibuat: <%= new Date(ticket.created_at).toLocaleDateString('id-ID', { weekday:'long', day:'2-digit', month:'long', year:'numeric' }) %>
-            </div>
+            <h1>Tiket #<%= ticket.id %></h1>
+            <p>Dibuat pada <%= new Date(ticket.created_at).toLocaleDateString('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }) %></p>
           </div>
-          <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
-            <a href="/tickets" class="btn-secondary-custom">
-              <i class="bi bi-arrow-left"></i> Kembali
-            </a>
+          <div class="page-actions">
+            <a href="/tickets" class="btn-secondary-app">Kembali</a>
             <% if ((currentUser.role === 'karyawan' && ticket.user_id === currentUser.id && ticket.status === 'open') || currentUser.role === 'admin') { %>
-            <a href="/tickets/<%= ticket.id %>/edit" class="btn-primary-custom">
-              <i class="bi bi-pencil"></i> Edit Tiket
-            </a>
+            <a href="/tickets/<%= ticket.id %>/edit" class="btn-primary-app">Edit Tiket</a>
             <% } %>
             <% if (currentUser.role === 'admin') { %>
-            <form method="POST" action="/tickets/<%= ticket.id %>?_method=DELETE" style="display:inline;" onsubmit="return confirm('Pindahkan ke trash?')">
-              <button type="submit" class="btn-danger-custom">
-                <i class="bi bi-trash3"></i> Hapus
-              </button>
+            <form method="POST" action="/tickets/<%= ticket.id %>?_method=DELETE" data-confirm="Pindahkan tiket ini ke trash?">
+              <button type="submit" class="btn-danger-custom">Hapus</button>
             </form>
             <% } %>
           </div>
-        </div>
+        </section>
 
-        <div style="display:grid; grid-template-columns:2fr 1fr; gap:1.5rem; align-items:start;">
-
-          <!-- LEFT COLUMN -->
+        <div class="detail-layout">
           <div>
-
-            <!-- Ticket Header -->
-            <div class="ticket-detail-header section-gap">
-              <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; flex-wrap:wrap;">
-                <div>
-                  <div style="font-size:.8rem; opacity:.7; margin-bottom:.5rem;">
-                    <i class="bi bi-hash"></i> TIKET #<%= ticket.id %>
+            <section class="data-card card-custom page-section">
+              <div class="card-body-custom">
+                <div class="detail-summary">
+                  <div>
+                    <div class="detail-kicker">Tiket operasional</div>
+                    <h2 class="detail-ticket-title"><%= ticket.title %></h2>
                   </div>
-                  <h2 style="font-size:1.3rem; font-weight:700; margin:0;"><%= ticket.title %></h2>
+                  <div class="page-actions">
+                    <span class="badge-priority badge-<%= ticket.priority %>"><%= priorityLabel(ticket.priority) %></span>
+                    <span class="badge-status badge-<%= ticket.status %>"><%= statusLabel(ticket.status) %></span>
+                  </div>
                 </div>
-                <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
-                  <span class="badge-priority badge-<%= ticket.priority %>"
-                    style="background:rgba(255,255,255,.15); color:#fff; font-size:.75rem;">
-                    <% if (ticket.priority === 'high') { %>🔴 Tinggi<% } else if (ticket.priority === 'medium') { %>🟡 Sedang<% } else { %>🟢 Rendah<% } %>
-                  </span>
-                  <span class="badge-status badge-<%= ticket.status %>"
-                    style="background:rgba(255,255,255,.15); color:#fff; font-size:.75rem;">
-                    <%= ticket.status === 'open' ? '⬜ Open' : ticket.status === 'in_progress' ? '🔄 In Progress' : ticket.status === 'resolved' ? '✅ Selesai' : '❌ Ditolak' %>
-                  </span>
-                </div>
-              </div>
-              <div class="ticket-meta">
-                <div class="ticket-meta-item">
-                  <i class="bi bi-person"></i>
-                  <span><%= ticket.requester_name %> (<%= ticket.department || 'N/A' %>)</span>
-                </div>
-                <% if (ticket.category_name) { %>
-                <div class="ticket-meta-item">
-                  <i class="bi bi-tag"></i>
-                  <span><%= ticket.category_name %></span>
-                </div>
-                <% } %>
-                <% if (ticket.location) { %>
-                <div class="ticket-meta-item">
-                  <i class="bi bi-geo-alt"></i>
-                  <span><%= ticket.location %></span>
-                </div>
-                <% } %>
-                <% if (ticket.technician_name) { %>
-                <div class="ticket-meta-item">
-                  <i class="bi bi-person-gear"></i>
-                  <span><%= ticket.technician_name %></span>
-                </div>
-                <% } %>
-              </div>
-            </div>
 
-            <!-- Description -->
-            <div class="card-custom section-gap">
+                <div class="detail-meta ticket-meta">
+                  <span class="ticket-meta-item"><i class="bi bi-person"></i><span><%= ticket.requester_name %> (<%= ticket.department || 'Tanpa departemen' %>)</span></span>
+                  <% if (ticket.category_name) { %><span class="ticket-meta-item"><i class="bi bi-tag"></i><span><%= ticket.category_name %></span></span><% } %>
+                  <% if (ticket.location) { %><span class="ticket-meta-item"><i class="bi bi-geo-alt"></i><span><%= ticket.location %></span></span><% } %>
+                  <span class="ticket-meta-item"><i class="bi bi-person-gear"></i><span><%= ticket.technician_name || 'Belum ditugaskan' %></span></span>
+                </div>
+              </div>
+            </section>
+
+            <section class="data-card card-custom page-section">
               <div class="card-header-custom">
-                <div class="card-title-custom"><i class="bi bi-file-text"></i> Deskripsi Masalah</div>
+                <div>
+                  <h2 class="panel-title">Deskripsi Masalah</h2>
+                  <div class="section-subtitle">Informasi yang disampaikan pelapor.</div>
+                </div>
               </div>
               <div class="card-body-custom">
-                <p style="font-size:.9rem; line-height:1.8; color:var(--text); margin:0; white-space:pre-wrap;"><%= ticket.description %></p>
+                <p class="description-copy"><%= ticket.description %></p>
               </div>
-            </div>
+            </section>
 
-            <!-- Admin Note (visible to all if exists, full form only for admin) -->
             <% if (ticket.admin_note || currentUser.role === 'admin') { %>
-            <div class="card-custom section-gap" style="border-left:4px solid var(--accent);">
+            <section class="data-card card-custom page-section">
               <div class="card-header-custom">
-                <div class="card-title-custom"><i class="bi bi-shield-check"></i> Catatan Admin</div>
+                <div>
+                  <h2 class="panel-title">Catatan Admin</h2>
+                  <div class="section-subtitle">Catatan koordinasi dan keputusan administratif.</div>
+                </div>
               </div>
               <div class="card-body-custom">
                 <% if (ticket.admin_note) { %>
-                <p style="font-size:.9rem; line-height:1.7; color:var(--text); margin:0;"><%= ticket.admin_note %></p>
+                <p class="description-copy"><%= ticket.admin_note %></p>
                 <% } else { %>
-                <p class="text-muted-sm" style="font-style:italic;">Belum ada catatan admin.</p>
+                <p class="text-muted-sm">Belum ada catatan admin.</p>
                 <% } %>
               </div>
-            </div>
+            </section>
             <% } %>
 
-            <!-- Notes / Discussion -->
-            <div class="card-custom section-gap">
+            <section class="data-card card-custom page-section">
               <div class="card-header-custom">
-                <div class="card-title-custom">
-                  <i class="bi bi-chat-left-text"></i> Catatan & Diskusi
-                  <span style="font-size:.75rem; background:var(--accent-soft); color:var(--accent); padding:.15rem .5rem; border-radius:10px; margin-left:.5rem;"><%= notes.length %></span>
+                <div>
+                  <h2 class="panel-title">Catatan & Diskusi</h2>
+                  <div class="section-subtitle"><%= notes.length %> catatan tercatat pada tiket ini.</div>
                 </div>
               </div>
               <div class="card-body-custom">
                 <% if (notes.length === 0) { %>
-                <p class="text-muted-sm" style="text-align:center; padding:1rem 0; font-style:italic;">Belum ada catatan.</p>
+                <div class="empty-state compact">
+                  <i class="bi bi-chat-left-text"></i>
+                  <h4>Belum ada catatan</h4>
+                  <p>Tiket ini belum memiliki diskusi tambahan.</p>
+                </div>
                 <% } else { %>
+                <div class="note-list info-list">
                   <% notes.forEach(note => { %>
                   <div class="note-item">
-                    <div class="note-avatar <%= note.author_role %>">
-                      <%= note.author_name ? note.author_name.charAt(0).toUpperCase() : '?' %>
-                    </div>
-                    <div class="note-body">
-                      <div style="display:flex; align-items:center; gap:.5rem; flex-wrap:wrap;">
+                    <div class="note-avatar"><%= note.author_name ? note.author_name.charAt(0).toUpperCase() : '?' %></div>
+                    <div class="cell-stack">
+                      <div class="page-actions note-meta">
                         <span class="note-author"><%= note.author_name %></span>
-                        <span class="badge-role-<%= note.author_role %>"
-                          style="font-size:.65rem; padding:.15rem .45rem; border-radius:8px; font-weight:600;">
-                          <%= note.author_role %>
-                        </span>
-                        <span class="note-time">
-                          · <%= new Date(note.created_at).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) %>
-                        </span>
+                        <span class="badge-role-<%= note.author_role %>"><%= note.author_role %></span>
+                        <span class="note-time"><%= new Date(note.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></span>
                       </div>
                       <div class="note-text"><%= note.note %></div>
                     </div>
                   </div>
                   <% }) %>
-                <% } %>
-
-                <!-- Add Note Form -->
-                <% if (ticket.status !== 'resolved' && ticket.status !== 'rejected') { %>
-                <div style="margin-top:1.25rem; padding-top:1.25rem; border-top:1px solid var(--border);">
-                  <form action="/tickets/<%= ticket.id %>/notes" method="POST">
-                    <div class="form-group" style="margin-bottom:.75rem;">
-                      <label class="form-label-custom" for="note">Tambah Catatan</label>
-                      <textarea
-                        id="note"
-                        name="note"
-                        class="form-control-custom"
-                        rows="3"
-                        placeholder="Tulis catatan atau update penanganan..."
-                        required
-                      ></textarea>
-                    </div>
-                    <button type="submit" class="btn-primary-custom">
-                      <i class="bi bi-send"></i> Kirim Catatan
-                    </button>
-                  </form>
                 </div>
                 <% } %>
 
+                <% if (ticket.status !== 'resolved' && ticket.status !== 'rejected') { %>
+                <div class="note-editor">
+                  <form action="/tickets/<%= ticket.id %>/notes" method="POST">
+                    <div class="form-group">
+                      <label class="form-label-custom" for="note">Tambah Catatan</label>
+                      <textarea id="note" name="note" class="form-control-custom" rows="4" placeholder="Tulis update penanganan atau informasi tambahan..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary-app">Kirim Catatan</button>
+                  </form>
+                </div>
+                <% } %>
               </div>
-            </div>
-
+            </section>
           </div>
 
-          <!-- RIGHT COLUMN -->
           <div>
-
-            <!-- Admin: Assign Teknisi & Update Status -->
             <% if (currentUser.role === 'admin') { %>
-            <div class="card-custom section-gap">
+            <section class="data-card card-custom page-section">
               <div class="card-header-custom">
-                <div class="card-title-custom"><i class="bi bi-sliders"></i> Kelola Tiket</div>
+                <div>
+                  <h2 class="panel-title">Kelola Tiket</h2>
+                  <div class="section-subtitle">Assignment teknisi dan perubahan status.</div>
+                </div>
               </div>
               <div class="card-body-custom">
                 <form action="/tickets/<%= ticket.id %>?_method=PUT" method="POST">
-                  <!-- Hidden fields to preserve other values -->
                   <input type="hidden" name="title" value="<%= ticket.title %>">
-                  <input type="hidden" name="description" value="<%= ticket.description %>">
                   <input type="hidden" name="location" value="<%= ticket.location || '' %>">
                   <input type="hidden" name="priority" value="<%= ticket.priority %>">
                   <input type="hidden" name="category_id" value="<%= ticket.category_id || '' %>">
-                  <input type="hidden" name="admin_note" value="<%= ticket.admin_note || '' %>">
+                  <textarea name="description" hidden><%= ticket.description %></textarea>
+                  <textarea name="admin_note" hidden><%= ticket.admin_note || '' %></textarea>
 
                   <div class="form-group">
-                    <label class="form-label-custom" for="technician_id">
-                      <i class="bi bi-person-gear"></i> Assign Teknisi
-                    </label>
+                    <label class="form-label-custom" for="technician_id">Assign Teknisi</label>
                     <select id="technician_id" name="technician_id" class="form-control-custom">
-                      <option value="">-- Belum Ditugaskan --</option>
+                      <option value="">Belum ditugaskan</option>
                       <% technicians.forEach(tech => { %>
                       <option value="<%= tech.id %>" <%= ticket.technician_id == tech.id ? 'selected' : '' %>><%= tech.name %></option>
                       <% }) %>
@@ -216,146 +170,106 @@
                   </div>
 
                   <div class="form-group">
-                    <label class="form-label-custom" for="statusAdmin">
-                      <i class="bi bi-flag"></i> Status Tiket
-                    </label>
+                    <label class="form-label-custom" for="statusAdmin">Status</label>
                     <select id="statusAdmin" name="status" class="form-control-custom">
                       <option value="open" <%= ticket.status === 'open' ? 'selected' : '' %>>Open</option>
-                      <option value="in_progress" <%= ticket.status === 'in_progress' ? 'selected' : '' %>>In Progress</option>
+                      <option value="in_progress" <%= ticket.status === 'in_progress' ? 'selected' : '' %>>Dalam proses</option>
                       <option value="resolved" <%= ticket.status === 'resolved' ? 'selected' : '' %>>Selesai</option>
                       <option value="rejected" <%= ticket.status === 'rejected' ? 'selected' : '' %>>Ditolak</option>
                     </select>
                   </div>
 
-                  <button type="submit" class="btn-primary-custom w-100" style="justify-content:center;">
-                    <i class="bi bi-floppy"></i> Simpan
-                  </button>
+                  <button type="submit" class="btn-primary-app btn-block">Simpan Perubahan</button>
                 </form>
               </div>
-            </div>
+            </section>
             <% } %>
 
-            <!-- Teknisi: Update Status -->
             <% if (currentUser.role === 'teknisi' && ticket.technician_id === currentUser.id) { %>
-            <div class="card-custom section-gap">
+            <section class="data-card card-custom page-section">
               <div class="card-header-custom">
-                <div class="card-title-custom"><i class="bi bi-sliders"></i> Update Status</div>
+                <div>
+                  <h2 class="panel-title">Update Status</h2>
+                  <div class="section-subtitle">Aksi teknisi untuk tiket yang sedang ditangani.</div>
+                </div>
               </div>
               <div class="card-body-custom">
                 <form action="/tickets/<%= ticket.id %>?_method=PUT" method="POST">
                   <input type="hidden" name="title" value="<%= ticket.title %>">
-                  <input type="hidden" name="description" value="<%= ticket.description %>">
+                  <textarea name="description" hidden><%= ticket.description %></textarea>
+
                   <div class="form-group">
                     <label class="form-label-custom" for="statusTeknisi">Status</label>
                     <select id="statusTeknisi" name="status" class="form-control-custom">
-                      <option value="in_progress" <%= ticket.status === 'in_progress' ? 'selected' : '' %>>Sedang Ditangani</option>
+                      <option value="in_progress" <%= ticket.status === 'in_progress' ? 'selected' : '' %>>Dalam proses</option>
                       <option value="resolved" <%= ticket.status === 'resolved' ? 'selected' : '' %>>Selesai</option>
                       <option value="rejected" <%= ticket.status === 'rejected' ? 'selected' : '' %>>Ditolak</option>
                     </select>
                   </div>
-                  <button type="submit" class="btn-success-custom w-100" style="justify-content:center;">
-                    <i class="bi bi-floppy"></i> Update Status
-                  </button>
+
+                  <button type="submit" class="btn-primary-app btn-block">Update Status</button>
                 </form>
               </div>
-            </div>
+            </section>
             <% } %>
 
-            <!-- Ticket Info Card -->
-            <div class="card-custom section-gap">
+            <section class="data-card card-custom page-section">
               <div class="card-header-custom">
-                <div class="card-title-custom"><i class="bi bi-info-circle"></i> Info Tiket</div>
-              </div>
-              <div class="card-body-custom">
-                <div style="display:flex; flex-direction:column; gap:.875rem;">
-                  <div>
-                    <div class="text-muted-sm">Status</div>
-                    <span class="badge-status badge-<%= ticket.status %>" style="margin-top:.25rem;">
-                      <%= ticket.status === 'open' ? 'Open' : ticket.status === 'in_progress' ? 'In Progress' : ticket.status === 'resolved' ? 'Selesai' : 'Ditolak' %>
-                    </span>
-                  </div>
-                  <div>
-                    <div class="text-muted-sm">Prioritas</div>
-                    <span class="badge-priority badge-<%= ticket.priority %>" style="margin-top:.25rem;">
-                      <%= ticket.priority === 'high' ? 'Tinggi' : ticket.priority === 'medium' ? 'Sedang' : 'Rendah' %>
-                    </span>
-                  </div>
-                  <div>
-                    <div class="text-muted-sm">Kategori</div>
-                    <div style="font-size:.875rem; font-weight:500; margin-top:.25rem;"><%= ticket.category_name || '-' %></div>
-                  </div>
-                  <div>
-                    <div class="text-muted-sm">Pemohon</div>
-                    <div style="font-size:.875rem; font-weight:500; margin-top:.25rem;"><%= ticket.requester_name %></div>
-                    <div class="text-muted-sm"><%= ticket.requester_email %></div>
-                  </div>
-                  <div>
-                    <div class="text-muted-sm">Teknisi</div>
-                    <div style="font-size:.875rem; font-weight:500; margin-top:.25rem;">
-                      <%= ticket.technician_name || 'Belum ditugaskan' %>
-                    </div>
-                  </div>
-                  <div>
-                    <div class="text-muted-sm">Lokasi</div>
-                    <div style="font-size:.875rem; margin-top:.25rem;"><%= ticket.location || '-' %></div>
-                  </div>
-                  <div>
-                    <div class="text-muted-sm">Dibuat</div>
-                    <div style="font-size:.8rem; margin-top:.25rem;">
-                      <%= new Date(ticket.created_at).toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' }) %>
-                    </div>
-                  </div>
-                  <div>
-                    <div class="text-muted-sm">Terakhir Diupdate</div>
-                    <div style="font-size:.8rem; margin-top:.25rem;">
-                      <%= new Date(ticket.updated_at).toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' }) %>
-                    </div>
-                  </div>
+                <div>
+                  <h2 class="panel-title">Info Tiket</h2>
+                  <div class="section-subtitle">Ringkasan identitas tiket dan pemiliknya.</div>
                 </div>
               </div>
-            </div>
+              <div class="card-body-custom">
+                <div class="key-value-list">
+                  <div class="key-value-item"><div class="key-label">Status</div><div class="key-value"><span class="badge-status badge-<%= ticket.status %>"><%= statusLabel(ticket.status) %></span></div></div>
+                  <div class="key-value-item"><div class="key-label">Prioritas</div><div class="key-value"><span class="badge-priority badge-<%= ticket.priority %>"><%= priorityLabel(ticket.priority) %></span></div></div>
+                  <div class="key-value-item"><div class="key-label">Kategori</div><div class="key-value"><%= ticket.category_name || '-' %></div></div>
+                  <div class="key-value-item"><div class="key-label">Pemohon</div><div class="key-value"><%= ticket.requester_name %></div><div class="cell-meta"><%= ticket.requester_email %></div></div>
+                  <div class="key-value-item"><div class="key-label">Teknisi</div><div class="key-value"><%= ticket.technician_name || 'Belum ditugaskan' %></div></div>
+                  <div class="key-value-item"><div class="key-label">Lokasi</div><div class="key-value"><%= ticket.location || '-' %></div></div>
+                  <div class="key-value-item"><div class="key-label">Dibuat</div><div class="key-value"><%= new Date(ticket.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) %></div></div>
+                  <div class="key-value-item"><div class="key-label">Terakhir Diupdate</div><div class="key-value"><%= new Date(ticket.updated_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }) %></div></div>
+                </div>
+              </div>
+            </section>
 
-            <!-- Status Timeline -->
-            <div class="card-custom">
+            <section class="data-card card-custom">
               <div class="card-header-custom">
-                <div class="card-title-custom"><i class="bi bi-clock-history"></i> Riwayat Status</div>
+                <div>
+                  <h2 class="panel-title">Riwayat Status</h2>
+                  <div class="section-subtitle">Jejak perubahan status dari waktu ke waktu.</div>
+                </div>
               </div>
               <div class="card-body-custom">
                 <% if (logs.length === 0) { %>
-                <p class="text-muted-sm" style="text-align:center; font-style:italic;">Belum ada riwayat.</p>
+                <p class="text-muted-sm">Belum ada riwayat perubahan status.</p>
                 <% } else { %>
                 <div class="timeline">
                   <% logs.forEach(log => { %>
                   <div class="timeline-item">
                     <div class="timeline-dot"></div>
-                    <div class="timeline-content">
-                      <div class="timeline-label">
-                        <% if (log.old_status) { %>
-                          <span style="color:var(--text-muted)"><%= log.old_status %></span>
-                          → <strong><%= log.new_status %></strong>
-                        <% } else { %>
-                          Tiket dibuat sebagai <strong><%= log.new_status %></strong>
-                        <% } %>
-                      </div>
-                      <div class="timeline-time">
-                        oleh <%= log.changed_by_name %> ·
-                        <%= new Date(log.created_at).toLocaleDateString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) %>
-                      </div>
+                    <div class="timeline-label">
+                      <% if (log.old_status) { %>
+                        <span class="text-muted-sm timeline-status-old"><%= statusLabel(log.old_status) %></span>
+                        ke <strong><%= statusLabel(log.new_status) %></strong>
+                      <% } else { %>
+                        Tiket dibuat sebagai <strong><%= statusLabel(log.new_status) %></strong>
+                      <% } %>
                     </div>
+                    <div class="timeline-time">oleh <%= log.changed_by_name %> · <%= new Date(log.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) %></div>
                   </div>
                   <% }) %>
                 </div>
                 <% } %>
               </div>
-            </div>
-
+            </section>
           </div>
-
         </div>
-
-      </div>
+      </main>
     </div>
   </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/app.js"></script>
 </body>

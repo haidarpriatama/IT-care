@@ -1,14 +1,40 @@
-<nav class="topbar">
+<%
+  const pageTitle = locals.title ? locals.title.split(' - ')[0] : 'IT Care';
+  const quickSearch = typeof search !== 'undefined' ? search : '';
+  const topbarRole = currentUser && currentUser.role
+    ? currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)
+    : 'Guest';
+%>
+<nav class="app-topbar topbar">
   <div class="topbar-left">
-    <div class="page-title"><%= locals.title ? locals.title.split(' - ')[0] : 'IT Care' %></div>
-    <div class="page-breadcrumb">IT Care Helpdesk System</div>
-  </div>
-  <div class="topbar-right">
-    <button class="topbar-btn" id="sidebarToggle" title="Toggle Sidebar">
+    <button class="btn-icon-app topbar-toggle" id="sidebarToggle" type="button" aria-label="Toggle sidebar">
       <i class="bi bi-list"></i>
     </button>
-    <div class="topbar-avatar" title="<%= currentUser ? currentUser.name : '' %>">
-      <%= currentUser ? currentUser.name.charAt(0).toUpperCase() : 'U' %>
+    <div class="topbar-heading">
+      <div class="topbar-title"><%= pageTitle %></div>
+      <div class="topbar-caption">Operasional tiket internal yang rapi dan cepat dipantau</div>
+    </div>
+  </div>
+
+  <div class="topbar-search-wrap">
+    <form class="topbar-search" action="/tickets" method="GET" role="search">
+      <i class="bi bi-search"></i>
+      <input type="search" name="search" value="<%= quickSearch %>" placeholder="Cari tiket atau pemohon..." aria-label="Cari tiket">
+    </form>
+  </div>
+
+  <div class="topbar-right">
+    <div class="topbar-actions">
+      <button class="btn-icon-app topbar-btn" type="button" title="Notifikasi">
+        <i class="bi bi-bell"></i>
+      </button>
+    </div>
+    <div class="topbar-user" title="<%= currentUser ? currentUser.name : '' %>">
+      <div class="topbar-avatar"><%= currentUser ? currentUser.name.charAt(0).toUpperCase() : 'U' %></div>
+      <div class="topbar-user-copy">
+        <div class="topbar-user-name"><%= currentUser ? currentUser.name : 'Pengguna' %></div>
+        <div class="topbar-user-role"><%= topbarRole %></div>
+      </div>
     </div>
   </div>
 </nav>

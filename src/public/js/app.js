@@ -1,87 +1,129 @@
-/**
- * IT Care - app.js
- * Global JS: Flash dismiss, sidebar toggle, active nav state
- */
-
 document.addEventListener('DOMContentLoaded', () => {
-
-  // ── Flash Message Auto-dismiss ──────────────────────────────
+  const body = document.body;
   const flashes = document.querySelectorAll('.flash-message');
-  flashes.forEach(flash => {
-    // Auto dismiss after 5s
-    setTimeout(() => dismissFlash(flash), 5000);
+  const sidebar = document.querySelector('.app-sidebar, .sidebar');
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
 
-    // Manual close
-    const closeBtn = flash.querySelector('.flash-close');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => dismissFlash(flash));
+  const dismissFlash = (flash) => {
+    flash.style.opacity = '0';
+    flash.style.transform = 'translateY(-8px)';
+    flash.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+    window.setTimeout(() => flash.remove(), 200);
+  };
+
+  flashes.forEach((flash) => {
+    window.setTimeout(() => dismissFlash(flash), 4500);
+
+    const closeButton = flash.querySelector('.flash-close');
+    if (closeButton) {
+      closeButton.addEventListener('click', () => dismissFlash(flash));
     }
   });
 
-  function dismissFlash(el) {
-    el.style.opacity = '0';
-    el.style.transform = 'translateX(100%)';
-    el.style.transition = 'opacity .3s ease, transform .3s ease';
-    setTimeout(() => el.remove(), 300);
+  const closeSidebar = () => body.classList.remove('sidebar-open');
+  const toggleSidebar = () => body.classList.toggle('sidebar-open');
+
+  if (sidebarToggle && sidebar) {
+    sidebarToggle.addEventListener('click', toggleSidebar);
   }
 
-  // ── Sidebar Toggle (Mobile) ──────────────────────────────────
-  const toggleBtn = document.getElementById('sidebarToggle');
-  const sidebar = document.querySelector('.sidebar');
-
-  if (toggleBtn && sidebar) {
-    toggleBtn.addEventListener('click', () => {
-      sidebar.classList.toggle('open');
-    });
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', closeSidebar);
   }
 
-  // Close sidebar when clicking outside (mobile)
-  document.addEventListener('click', (e) => {
-    if (sidebar && sidebar.classList.contains('open')) {
-      if (!sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
-        sidebar.classList.remove('open');
-      }
+  document.addEventListener('click', (event) => {
+    if (!body.classList.contains('sidebar-open') || !sidebar || !sidebarToggle) {
+      return;
+    }
+
+    if (!sidebar.contains(event.target) && !sidebarToggle.contains(event.target)) {
+      closeSidebar();
     }
   });
 
-  // ── Active Sidebar Item ──────────────────────────────────────
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 920) {
+      closeSidebar();
+    }
+  });
+
   const currentPath = window.location.pathname;
   const sidebarLinks = document.querySelectorAll('.sidebar-item');
 
-  sidebarLinks.forEach(link => {
+  const isActiveLink = (link) => {
     const href = link.getAttribute('href');
-    if (!href) return;
+    const match = link.dataset.match || href;
+    const mode = link.dataset.matchMode || 'exact';
+    const excludes = (link.dataset.exclude || '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
 
-    // Exact match or starts with (for nested routes like /tickets/*)
-    if (
-      currentPath === href ||
-      (href !== '/dashboard' && currentPath.startsWith(href)) ||
-      (href === '/tickets' && currentPath.startsWith('/tickets') && !currentPath.startsWith('/tickets/create'))
-    ) {
-      link.classList.add('active');
+    if (excludes.some((value) => currentPath === value || currentPath.startsWith(`${value}/`))) {
+      return false;
     }
 
-    // Special: /tickets/create
-    if (href === '/tickets/create' && currentPath === '/tickets/create') {
-      sidebarLinks.forEach(l => l.classList.remove('active'));
+    if (mode === 'prefix') {
+      return currentPath === match || currentPath.startsWith(`${match}/`);
+    }
+
+    return currentPath === match;
+  };
+
+  sidebarLinks.forEach((link) => {
+    if (isActiveLink(link)) {
       link.classList.add('active');
     }
   });
 
-  // ── Confirm Delete Buttons ───────────────────────────────────
-  // Already handled inline via onsubmit= in views, but we can also
-  // add a safety net here.
-
-  // ── Auto-submit filter forms on select change ────────────────
-  const autoSubmitSelects = document.querySelectorAll('[data-auto-submit]');
-  autoSubmitSelects.forEach(sel => {
-    sel.addEventListener('change', () => sel.closest('form').submit());
+  const autoSubmitFields = document.querySelectorAll('[data-auto-submit]');
+  autoSubmitFields.forEach((field) => {
+    field.addEventListener('change', () => {
+      const form = field.closest('form');
+      if (form) {
+        form.submit();
+      }
+    });
   });
 
-  // ── Tooltip init (Bootstrap) ─────────────────────────────────
+  const passwordToggles = document.querySelectorAll('[data-password-toggle]');
+  passwordToggles.forEach((button) => {
+    const selector = button.dataset.passwordToggle;
+    const input = document.querySelector(selector);
+    const icon = button.querySelector('i');
+
+    if (!input) {
+      return;
+    }
+
+    button.addEventListener('click', () => {
+      const nextType = input.type === 'password' ? 'text' : 'password';
+      input.type = nextType;
+
+      if (icon) {
+        icon.className = nextType === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+      }
+
+      button.setAttribute(
+        'aria-label',
+        nextType === 'password' ? 'Tampilkan password' : 'Sembunyikan password'
+      );
+    });
+  });
+
+  const confirmElements = document.querySelectorAll('[data-confirm]');
+  confirmElements.forEach((element) => {
+    element.addEventListener('submit', (event) => {
+      const message = element.dataset.confirm;
+      if (message && !window.confirm(message)) {
+        event.preventDefault();
+      }
+    });
+  });
+
   if (typeof bootstrap !== 'undefined') {
-    const tooltipEls = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-    tooltipEls.forEach(el => new bootstrap.Tooltip(el));
+    const tooltipElements = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltipElements.forEach((element) => new bootstrap.Tooltip(element));
   }
-
 });

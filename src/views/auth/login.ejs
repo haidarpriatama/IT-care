@@ -4,76 +4,84 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title || 'Login - IT Care' %></title>
-  <meta name="description" content="Login ke sistem IT Care Helpdesk">
+  <meta name="description" content="Login ke sistem helpdesk internal IT Care">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
+<body class="auth-page">
   <%- include('../partials/flash') %>
-  <div class="auth-wrapper">
-    <div class="auth-card">
-      <div class="auth-logo">
-        <div class="logo-icon"><i class="bi bi-shield-check"></i></div>
-        <h1>IT<span>Care</span></h1>
-      </div>
-      <p class="auth-subtitle">Masuk ke sistem helpdesk IT Anda</p>
 
-      <form action="/login" method="POST">
-        <div class="form-group">
-          <label class="form-label-custom">Email</label>
-          <div class="input-group">
-            <span class="input-group-text" style="border-radius:10px 0 0 10px; border:1.5px solid #e2e8f0; border-right:none; background:#f8fafc;">
-              <i class="bi bi-envelope" style="color:#94a3b8;"></i>
+  <div class="auth-shell">
+    <div class="auth-grid">
+      <section class="auth-side">
+        <div>
+          <div class="sidebar-brand-link sidebar-logo">
+            <span class="brand-mark"><i class="bi bi-grid-1x2-fill"></i></span>
+            <span>
+              <span class="brand-name">IT<span>Care</span></span>
+              <span class="brand-caption">Internal helpdesk workspace</span>
             </span>
-            <input type="email" name="email" class="form-control-custom" style="border-radius:0 10px 10px 0;" placeholder="admin@itcare.id" required autocomplete="email">
           </div>
+          <div class="auth-kicker">Helpdesk Internal</div>
+          <h1>Masuk ke dashboard operasional IT yang lebih rapi.</h1>
+          <p>Kelola tiket, pantau penugasan teknisi, dan tindak lanjuti permintaan internal dalam satu alur kerja yang ringkas.</p>
+          <ul class="auth-points">
+            <li><i class="bi bi-check2"></i><span>Tracking status yang jelas untuk admin, teknisi, dan karyawan</span></li>
+            <li><i class="bi bi-check2"></i><span>Tampilan data yang fokus pada tiket, bukan dekorasi template</span></li>
+            <li><i class="bi bi-check2"></i><span>Laporan operasional tetap tersusun tanpa mengubah alur backend</span></li>
+          </ul>
         </div>
-        <div class="form-group">
-          <label class="form-label-custom">Password</label>
-          <div class="input-group">
-            <span class="input-group-text" style="border-radius:10px 0 0 10px; border:1.5px solid #e2e8f0; border-right:none; background:#f8fafc;">
-              <i class="bi bi-lock" style="color:#94a3b8;"></i>
+      </section>
+
+      <section class="auth-card">
+        <div class="auth-header">
+          <div class="sidebar-brand-link sidebar-logo">
+            <span class="brand-mark logo-icon"><i class="bi bi-grid-1x2-fill"></i></span>
+            <span>
+              <span class="brand-name">IT<span>Care</span></span>
+              <span class="brand-caption">Akses akun Anda</span>
             </span>
-            <input type="password" name="password" id="password" class="form-control-custom" style="border-radius:0 10px 10px 0;" placeholder="••••••••" required autocomplete="current-password">
-            <button type="button" class="btn-icon" style="border-radius:0 10px 10px 0; border-left:none;" onclick="togglePassword()">
-              <i class="bi bi-eye" id="toggleIcon"></i>
-            </button>
           </div>
+          <h2>Login</h2>
+          <p class="auth-subtitle">Gunakan akun kerja Anda untuk masuk ke sistem helpdesk.</p>
         </div>
-        <button type="submit" class="btn-primary-custom w-100 justify-content-center mt-2" style="padding:.75rem;">
-          <i class="bi bi-box-arrow-in-right"></i> Masuk
-        </button>
-      </form>
 
-      <div class="text-center mt-4" style="font-size:.85rem; color:#64748b;">
-        Belum punya akun? <a href="/register" style="color:#4f46e5; font-weight:600;">Daftar disini</a>
-      </div>
+        <form action="/login" method="POST">
+          <div class="form-group">
+            <label class="form-label-custom" for="email">Email</label>
+            <input type="email" name="email" id="email" class="form-control-custom" placeholder="admin@itcare.id" required autocomplete="email">
+          </div>
 
-      <div class="divider" style="margin-top:1.5rem;"></div>
-      <div style="background:#f8fafc; border-radius:10px; padding:.875rem; font-size:.78rem; color:#64748b;">
-        <strong>Demo Login:</strong><br>
-        Admin: admin@itcare.id<br>
-        Teknisi: teknisi@itcare.id<br>
-        Karyawan: karyawan@itcare.id<br>
-        <em>Password: password123</em>
-      </div>
+          <div class="form-group">
+            <label class="form-label-custom" for="password">Password</label>
+            <div class="input-shell">
+              <input type="password" name="password" id="password" class="form-control-custom" placeholder="Masukkan password" required autocomplete="current-password">
+              <button type="button" class="btn-icon-app" data-password-toggle="#password" aria-label="Tampilkan password">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary-app btn-block">Masuk</button>
+        </form>
+
+        <div class="auth-link-row">
+          Belum punya akun? <a href="/register">Daftar di sini</a>
+        </div>
+
+        <div class="auth-demo">
+          <strong>Akun demo</strong>
+          Admin: <code>admin@itcare.id</code><br>
+          Teknisi: <code>teknisi@itcare.id</code><br>
+          Karyawan: <code>karyawan@itcare.id</code><br>
+          Password: <code>password</code>
+        </div>
+      </section>
     </div>
   </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/js/app.js"></script>
-  <script>
-    function togglePassword() {
-      const p = document.getElementById('password');
-      const icon = document.getElementById('toggleIcon');
-      if (p.type === 'password') {
-        p.type = 'text';
-        icon.className = 'bi bi-eye-slash';
-      } else {
-        p.type = 'password';
-        icon.className = 'bi bi-eye';
-      }
-    }
-  </script>
 </body>
 </html>

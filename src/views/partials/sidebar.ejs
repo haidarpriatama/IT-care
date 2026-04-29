@@ -1,81 +1,82 @@
 <%
   const user = currentUser;
   const role = user ? user.role : '';
-  const path = locals.currentPath || '';
+  const roleLabel = role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Guest';
 %>
-<aside class="sidebar">
-  <div class="sidebar-header">
-    <div class="sidebar-logo">
-      <div class="logo-icon"><i class="bi bi-shield-check"></i></div>
-      <h2>IT<span>Care</span></h2>
-    </div>
+<aside class="app-sidebar sidebar">
+  <div class="sidebar-brand sidebar-header">
+    <a href="/dashboard" class="sidebar-brand-link sidebar-logo">
+      <span class="brand-mark logo-icon"><i class="bi bi-grid-1x2-fill"></i></span>
+      <span>
+        <span class="brand-name">IT<span>Care</span></span>
+        <span class="brand-caption">Internal helpdesk workspace</span>
+      </span>
+    </a>
   </div>
 
   <nav class="sidebar-nav">
-    <div class="nav-section-title">Main</div>
-
-    <a href="/dashboard" class="sidebar-item">
-      <i class="bi bi-grid-1x2"></i>
-      <span>Dashboard</span>
-    </a>
-
-    <a href="/tickets" class="sidebar-item">
-      <i class="bi bi-ticket-detailed"></i>
-      <span>Tiket</span>
-    </a>
-
-    <% if (role === 'admin' || role === 'karyawan') { %>
-    <a href="/tickets/create" class="sidebar-item">
-      <i class="bi bi-plus-circle"></i>
-      <span>Buat Tiket</span>
-    </a>
-    <% } %>
+    <div class="nav-section">
+      <div class="nav-section-title">Workspace</div>
+      <a href="/dashboard" class="sidebar-item" data-match="/dashboard">
+        <i class="bi bi-grid-1x2"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="/tickets" class="sidebar-item" data-match="/tickets" data-match-mode="prefix" data-exclude="/tickets/create,/tickets/trash">
+        <i class="bi bi-ticket-detailed"></i>
+        <span>Tiket</span>
+      </a>
+      <% if (role === 'admin' || role === 'karyawan') { %>
+      <a href="/tickets/create" class="sidebar-item" data-match="/tickets/create">
+        <i class="bi bi-plus-square"></i>
+        <span>Buat Tiket</span>
+      </a>
+      <% } %>
+    </div>
 
     <% if (role === 'admin') { %>
-    <div class="nav-section-title">Manajemen</div>
-
-    <a href="/users" class="sidebar-item">
-      <i class="bi bi-people"></i>
-      <span>Users</span>
-    </a>
-
-    <a href="/categories" class="sidebar-item">
-      <i class="bi bi-tags"></i>
-      <span>Kategori</span>
-    </a>
-
-    <a href="/reports" class="sidebar-item">
-      <i class="bi bi-bar-chart-line"></i>
-      <span>Laporan</span>
-    </a>
-
-    <a href="/trash" class="sidebar-item">
-      <i class="bi bi-trash3"></i>
-      <span>Trash</span>
-    </a>
+    <div class="nav-section">
+      <div class="nav-section-title">Administrasi</div>
+      <a href="/users" class="sidebar-item" data-match="/users" data-match-mode="prefix">
+        <i class="bi bi-people"></i>
+        <span>Users</span>
+      </a>
+      <a href="/categories" class="sidebar-item" data-match="/categories" data-match-mode="prefix">
+        <i class="bi bi-tags"></i>
+        <span>Kategori</span>
+      </a>
+      <a href="/reports" class="sidebar-item" data-match="/reports" data-match-mode="prefix">
+        <i class="bi bi-bar-chart"></i>
+        <span>Laporan</span>
+      </a>
+      <a href="/tickets/trash" class="sidebar-item" data-match="/tickets/trash" data-match-mode="prefix">
+        <i class="bi bi-trash3"></i>
+        <span>Trash</span>
+      </a>
+    </div>
     <% } %>
 
     <% if (role === 'karyawan') { %>
-    <div class="nav-section-title">Pengaturan</div>
-    <a href="/categories" class="sidebar-item">
-      <i class="bi bi-tags"></i>
-      <span>Kategori</span>
-    </a>
+    <div class="nav-section">
+      <div class="nav-section-title">Referensi</div>
+      <a href="/categories" class="sidebar-item" data-match="/categories" data-match-mode="prefix">
+        <i class="bi bi-tags"></i>
+        <span>Kategori</span>
+      </a>
+    </div>
     <% } %>
   </nav>
 
   <div class="sidebar-footer">
     <div class="sidebar-user">
-      <div class="sidebar-user-avatar">
-        <%= user ? user.name.charAt(0).toUpperCase() : 'U' %>
-      </div>
+      <div class="sidebar-user-avatar"><%= user ? user.name.charAt(0).toUpperCase() : 'U' %></div>
       <div class="sidebar-user-info">
-        <div class="sidebar-user-name"><%= user ? user.name : '' %></div>
-        <div class="sidebar-user-role"><%= role %></div>
+        <div class="sidebar-user-name"><%= user ? user.name : 'Pengguna' %></div>
+        <div class="sidebar-user-role"><%= roleLabel %></div>
       </div>
-      <a href="/logout" class="sidebar-logout" title="Logout">
+      <a href="/logout" class="sidebar-logout" title="Logout" aria-label="Logout">
         <i class="bi bi-box-arrow-right"></i>
       </a>
     </div>
   </div>
 </aside>
+<button type="button" class="sidebar-overlay" id="sidebarOverlay" aria-label="Tutup sidebar"></button>
