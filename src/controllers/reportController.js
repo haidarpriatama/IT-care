@@ -109,4 +109,4 @@ const getReports = async (req, res) => {
   }
 };
 
-module.exports = { getReports };
+module.exports = { getReports }
