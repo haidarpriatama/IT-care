@@ -1,205 +1,144 @@
-# IT Care - Internal IT Helpdesk System
+# IT Care
 
-> Sistem helpdesk internal untuk pengaduan keluhan IT dari karyawan, dibangun menggunakan **Node.js, Express.js, PostgreSQL (Neon), EJS, Bootstrap 5**, dan **Custom CSS**.
+**IT Care** adalah aplikasi helpdesk internal untuk pengelolaan keluhan IT karyawan. Aplikasi ini dibangun menggunakan Node.js, Express.js, PostgreSQL, EJS, dan Bootstrap.
 
----
+## Tech Stack
 
-## 🚀 Fitur Utama
+- Node.js
+- Express.js
+- PostgreSQL / Neon
+- EJS
+- Bootstrap 5
+- bcrypt
+- express-session
+- connect-pg-simple
+- pg
 
-| Fitur | Admin | Teknisi | Karyawan |
-|---|:---:|:---:|:---:|
-| Login & Registrasi | ✅ | ✅ | ✅ |
-| Dashboard statistik | ✅ | ✅ | ✅ |
-| Buat tiket | ✅ | - | ✅ |
-| Lihat semua tiket | ✅ | - | - |
-| Lihat tiket sendiri | - | - | ✅ |
-| Lihat tiket ditugaskan | - | ✅ | - |
-| Edit tiket (semua field) | ✅ | - | - |
-| Edit tiket (status) | - | ✅ | - |
-| Edit tiket (open only) | - | - | ✅ |
-| Tambah catatan | ✅ | ✅ | ✅ |
-| Assign teknisi | ✅ | - | - |
-| Soft delete & restore | ✅ | - | ✅* |
-| Hard delete | ✅ | - | - |
-| Kelola user (CRUD) | ✅ | - | - |
-| Kelola kategori (CRUD) | ✅ | - | - |
-| Laporan JOIN multi-tabel | ✅ | - | - |
-| Pencarian & filter | ✅ | ✅ | ✅ |
+## Prerequisites
 
-> *Karyawan hanya bisa soft delete tiket miliknya yang masih berstatus **open**.
+Pastikan sudah terpasang:
 
----
+- Node.js 18 atau lebih baru
+- npm
+- Git
+- Akun dan database Neon PostgreSQL
 
-## 🗂️ Struktur Folder
+## Installation
 
-```
-it-care/
-├── src/
-│   ├── app.js                # Entry point
-│   ├── config/
-│   │   └── db.js             # Koneksi PostgreSQL (pg)
-│   ├── controllers/
-│   │   ├── authController.js
-│   │   ├── categoryController.js
-│   │   ├── dashboardController.js
-│   │   ├── reportController.js
-│   │   ├── ticketController.js
-│   │   └── userController.js
-│   ├── middlewares/
-│   │   ├── authMiddleware.js  # ensureAuthenticated
-│   │   └── roleMiddleware.js  # authorizeRoles
-│   ├── routes/
-│   │   ├── authRoutes.js
-│   │   ├── categoryRoutes.js
-│   │   ├── dashboardRoutes.js
-│   │   ├── reportRoutes.js
-│   │   ├── ticketRoutes.js
-│   │   └── userRoutes.js
-│   ├── views/
-│   │   ├── auth/             # login.ejs, register.ejs
-│   │   ├── dashboard/        # index.ejs
-│   │   ├── tickets/          # index, create, edit, detail, trash
-│   │   ├── categories/       # index, create, edit
-│   │   ├── users/            # index, create, edit
-│   │   ├── reports/          # index.ejs
-│   │   └── partials/         # sidebar, navbar, flash
-│   ├── public/
-│   │   ├── css/style.css     # Custom CSS (dark purple sidebar)
-│   │   └── js/app.js
-│   └── database/
-│       ├── schema.sql
-│       └── seed.sql
-├── .env
-├── .env.example
-├── package.json
-└── README.md
-```
+Clone repository:
 
----
-
-## ⚙️ Instalasi & Setup
-
-### 1. Clone atau masuk ke folder project
 ```bash
-cd it-care
+git clone https://github.com/haidarpriatama/IT-care.git
+cd IT-care
 ```
 
-### 2. Install dependencies
+Install dependencies:
+
 ```bash
 npm install
 ```
 
-### 3. Setup environment variables
+Buat file environment:
+
 ```bash
 cp .env.example .env
 ```
-Edit `.env` dan isi:
-```
-DATABASE_URL=postgresql://user:password@host/dbname?sslmode=require
-SESSION_SECRET=random_secret_string
+
+Isi file `.env`:
+
+```env
 PORT=3000
+NODE_ENV=development
+DATABASE_URL=postgresql://username:password@host/database?sslmode=require
+SESSION_SECRET=change_this_to_a_random_secret
 ```
 
-### 4. Jalankan schema di database Neon
-Buka **Neon Console → SQL Editor** atau gunakan tool seperti `psql`, lalu jalankan:
-```sql
--- Buat semua tabel
-\i src/database/schema.sql
+Jalankan migrasi/schema database:
 
--- Isi data contoh (opsional)
-\i src/database/seed.sql
+```bash
+npm run db:schema
 ```
 
-### 5. Jalankan server
+Isi data awal:
+
+```bash
+npm run db:seed
+```
+
+Jalankan aplikasi:
+
 ```bash
 npm run dev
 ```
-Buka browser: **http://localhost:3000**
 
----
+Aplikasi akan berjalan di:
 
-## 👤 Akun Demo
+```text
+http://localhost:3000
+```
 
-Setelah menjalankan `seed.sql`, akun berikut tersedia:
+## Demo Accounts
+
+Setelah menjalankan seed, gunakan akun berikut untuk login:
 
 | Role | Email | Password |
 |---|---|---|
-| Admin | admin@itcare.id | password123 |
-| Teknisi | teknisi@itcare.id | password123 |
-| Karyawan | karyawan@itcare.id | password123 |
+| Admin | admin@itcare.id | password |
+| Teknisi | teknisi@itcare.id | password |
+| Karyawan | karyawan@itcare.id | password |
+
+## Available Scripts
+
+```bash
+npm run dev       # menjalankan aplikasi dalam mode development
+npm start         # menjalankan aplikasi dalam mode production/local
+npm run db:schema # membuat tabel database
+npm run db:seed   # mengisi data awal
+```
+
+## Environment Variables
+
+| Variable | Description |
+|---|---|
+| `PORT` | Port aplikasi Express |
+| `NODE_ENV` | Environment aplikasi |
+| `DATABASE_URL` | Connection string PostgreSQL dari Neon |
+| `SESSION_SECRET` | Secret key untuk session |
+
+## Database Setup Notes
+
+Project ini menggunakan PostgreSQL melalui package `pg`. Semua tabel dibuat dari file:
+
+```text
+src/database/schema.sql
+```
+
+Data awal berada pada file:
+
+```text
+src/database/seed.sql
+```
+
+Pastikan `DATABASE_URL` sudah mengarah ke database Neon yang benar sebelum menjalankan script database.
+
+## Project Structure
+
+```text
+src/
+├── app.js
+├── config/
+├── controllers/
+├── database/
+├── middlewares/
+├── public/
+├── routes/
+└── views/
+```
+
+## Important Notes
+
+File `.env` tidak boleh di-commit ke repository. Gunakan `.env.example` sebagai template konfigurasi.
 
 ---
 
-## 🗄️ Tabel Database
-
-1. **users** — data pengguna (admin, teknisi, karyawan)
-2. **categories** — kategori tiket (Hardware, Software, Jaringan, dll.)
-3. **tickets** — tiket pengaduan dengan soft delete (`deleted_at`)
-4. **ticket_notes** — catatan/diskusi per tiket
-5. **status_logs** — riwayat perubahan status tiket
-6. **session** — tabel sesi PostgreSQL (connect-pg-simple)
-
----
-
-## 🔑 Routes
-
-| Method | Path | Deskripsi | Akses |
-|---|---|---|---|
-| GET | `/login` | Halaman login | Public |
-| POST | `/login` | Proses login | Public |
-| GET | `/register` | Halaman register | Public |
-| POST | `/register` | Proses register | Public |
-| GET | `/logout` | Logout | Auth |
-| GET | `/dashboard` | Dashboard | Auth |
-| GET | `/tickets` | Daftar tiket | Auth |
-| GET | `/tickets/create` | Form buat tiket | Admin, Karyawan |
-| POST | `/tickets` | Simpan tiket baru | Admin, Karyawan |
-| GET | `/tickets/:id` | Detail tiket | Auth |
-| GET | `/tickets/:id/edit` | Form edit tiket | Auth |
-| PUT | `/tickets/:id` | Update tiket | Auth |
-| DELETE | `/tickets/:id` | Soft delete | Auth |
-| POST | `/tickets/:id/notes` | Tambah catatan | Auth |
-| GET | `/tickets/trash` | Halaman trash | Admin |
-| POST | `/tickets/:id/restore` | Restore tiket | Admin |
-| DELETE | `/tickets/:id/hard` | Hard delete | Admin |
-| GET | `/categories` | Daftar kategori | Auth |
-| GET | `/categories/create` | Form tambah | Admin |
-| POST | `/categories` | Simpan kategori | Admin |
-| GET | `/categories/:id/edit` | Form edit | Admin |
-| PUT | `/categories/:id` | Update kategori | Admin |
-| DELETE | `/categories/:id` | Hapus kategori | Admin |
-| GET | `/users` | Daftar user | Admin |
-| GET | `/users/create` | Form tambah user | Admin |
-| POST | `/users` | Simpan user | Admin |
-| GET | `/users/:id/edit` | Form edit user | Admin |
-| PUT | `/users/:id` | Update user | Admin |
-| DELETE | `/users/:id` | Hapus user | Admin |
-| GET | `/reports` | Laporan JOIN | Admin |
-
----
-
-## 🛠️ Tech Stack
-
-- **Runtime**: Node.js
-- **Framework**: Express.js v5
-- **Database**: PostgreSQL (Neon) via `pg` (raw SQL, no ORM)
-- **Session Store**: `connect-pg-simple`
-- **Auth**: `express-session` + `bcrypt`
-- **Template Engine**: EJS
-- **UI**: Bootstrap 5.3 + Bootstrap Icons + Custom CSS
-- **Dev**: Nodemon
-
----
-
-## 📝 Catatan Pengembangan
-
-- Semua query menggunakan **raw SQL** melalui `pg.Pool`, tidak ada ORM
-- Halaman `/reports` menggunakan **JOIN lebih dari 2 tabel**: `tickets JOIN users JOIN categories JOIN status_logs`
-- Soft delete menggunakan kolom `deleted_at` pada tabel `tickets`
-- Session disimpan di PostgreSQL menggunakan `connect-pg-simple`
-- Password di-hash menggunakan `bcrypt` dengan salt rounds 10
-- Method override (`_method=PUT/DELETE`) untuk form HTML
-
----
-
-*IT Care © 2025 - Internal IT Helpdesk System*
+IT Care — Internal IT Helpdesk System
