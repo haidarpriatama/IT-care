@@ -408,6 +408,28 @@ const hardDeleteTicket = async (req, res) => {
   res.redirect('/trash');
 };
 
+// ─────────────────────────────────────────────
+// GET /api/logs  (api for notifications)
+// ─────────────────────────────────────────────
+const getLogsApi = async (req, res) => {
+  const user = req.session.user;
+  try {
+    const logs = await pool.query(`
+      SELECT sl.*, t.title AS ticket_title, u.name AS changed_by_name
+      FROM status_logs sl
+      JOIN tickets t ON sl.ticket_id = t.id
+      LEFT JOIN users u ON sl.changed_by = u.id
+      WHERE t.user_id = $1
+      ORDER BY sl.created_at DESC
+      LIMIT 5
+    `, [user.id]);
+    res.json(logs.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Gagal memuat log tiket' });
+  }
+};
+
 module.exports = {
   getTickets,
   getCreateTicket,
@@ -420,4 +442,5 @@ module.exports = {
   getTrash,
   restoreTicket,
   hardDeleteTicket,
+  getLogsApi,
 };

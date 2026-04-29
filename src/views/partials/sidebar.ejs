@@ -36,6 +36,10 @@
     <% if (role === 'admin') { %>
     <div class="nav-section">
       <div class="nav-section-title">Administrasi</div>
+      <a href="/reports" class="sidebar-item" data-match="/reports" data-match-mode="prefix">
+        <i class="bi bi-bar-chart"></i>
+        <span>Laporan</span>
+      </a>
       <a href="/users" class="sidebar-item" data-match="/users" data-match-mode="prefix">
         <i class="bi bi-people"></i>
         <span>Users</span>
@@ -43,10 +47,6 @@
       <a href="/categories" class="sidebar-item" data-match="/categories" data-match-mode="prefix">
         <i class="bi bi-tags"></i>
         <span>Kategori</span>
-      </a>
-      <a href="/reports" class="sidebar-item" data-match="/reports" data-match-mode="prefix">
-        <i class="bi bi-bar-chart"></i>
-        <span>Laporan</span>
       </a>
       <a href="/tickets/trash" class="sidebar-item" data-match="/tickets/trash" data-match-mode="prefix">
         <i class="bi bi-trash3"></i>

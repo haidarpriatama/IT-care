@@ -70,7 +70,6 @@
                   <th>#</th>
                   <th>Nama Kategori</th>
                   <th>Deskripsi</th>
-                  <th>Dibuat</th>
                   <% if (currentUser.role === 'admin') { %><th>Aksi</th><% } %>
                 </tr>
               </thead>
@@ -85,7 +84,6 @@
                     </div>
                   </td>
                   <td class="text-muted-sm"><%= cat.description || '-' %></td>
-                  <td class="text-muted-sm"><%= new Date(cat.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) %></td>
                   <% if (currentUser.role === 'admin') { %>
                   <td>
                     <div class="table-actions action-inline">

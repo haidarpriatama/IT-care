@@ -13,6 +13,7 @@ const {
   getTrash,
   restoreTicket,
   hardDeleteTicket,
+  getLogsApi,
 } = require('../controllers/ticketController');
 
 // Trash (admin only)
@@ -21,6 +22,7 @@ router.post('/:id/restore', ensureAuthenticated, authorizeRoles('admin'), restor
 router.delete('/:id/hard', ensureAuthenticated, authorizeRoles('admin'), hardDeleteTicket);
 
 // CRUD Tickets
+router.get('/api/logs', ensureAuthenticated, getLogsApi);
 router.get('/', ensureAuthenticated, getTickets);
 router.get('/create', ensureAuthenticated, authorizeRoles('admin', 'karyawan'), getCreateTicket);
 router.post('/', ensureAuthenticated, authorizeRoles('admin', 'karyawan'), postCreateTicket);
