@@ -104,7 +104,7 @@ const getDashboard = async (req, res) => {
     });
   } catch (err) {
     console.error('Dashboard error:', err);
-    req.flash('error', 'Gagal memuat dashboard.');
+    req.flash('error', 'Gagal untuk memuat dashboard.');
     res.redirect('/login');
   }
 };
