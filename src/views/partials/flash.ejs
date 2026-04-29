@@ -1,0 +1,29 @@
+<div class="flash-container" id="flashContainer">
+  <% if (messages && messages.success && messages.success.length > 0) { %>
+    <% messages.success.forEach(msg => { %>
+      <div class="flash-message success">
+        <i class="bi bi-check-circle-fill flash-icon"></i>
+        <span class="flash-text"><%= msg %></span>
+        <button class="flash-close"><i class="bi bi-x"></i></button>
+      </div>
+    <% }) %>
+  <% } %>
+  <% if (messages && messages.error && messages.error.length > 0) { %>
+    <% messages.error.forEach(msg => { %>
+      <div class="flash-message error">
+        <i class="bi bi-exclamation-circle-fill flash-icon"></i>
+        <span class="flash-text"><%= msg %></span>
+        <button class="flash-close"><i class="bi bi-x"></i></button>
+      </div>
+    <% }) %>
+  <% } %>
+  <% if (messages && messages.warning && messages.warning.length > 0) { %>
+    <% messages.warning.forEach(msg => { %>
+      <div class="flash-message warning">
+        <i class="bi bi-exclamation-triangle-fill flash-icon"></i>
+        <span class="flash-text"><%= msg %></span>
+        <button class="flash-close"><i class="bi bi-x"></i></button>
+      </div>
+    <% }) %>
+  <% } %>
+</div>

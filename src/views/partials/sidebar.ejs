@@ -1,0 +1,81 @@
+<%
+  const user = currentUser;
+  const role = user ? user.role : '';
+  const path = locals.currentPath || '';
+%>
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="logo-icon"><i class="bi bi-shield-check"></i></div>
+      <h2>IT<span>Care</span></h2>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">Main</div>
+
+    <a href="/dashboard" class="sidebar-item">
+      <i class="bi bi-grid-1x2"></i>
+      <span>Dashboard</span>
+    </a>
+
+    <a href="/tickets" class="sidebar-item">
+      <i class="bi bi-ticket-detailed"></i>
+      <span>Tiket</span>
+    </a>
+
+    <% if (role === 'admin' || role === 'karyawan') { %>
+    <a href="/tickets/create" class="sidebar-item">
+      <i class="bi bi-plus-circle"></i>
+      <span>Buat Tiket</span>
+    </a>
+    <% } %>
+
+    <% if (role === 'admin') { %>
+    <div class="nav-section-title">Manajemen</div>
+
+    <a href="/users" class="sidebar-item">
+      <i class="bi bi-people"></i>
+      <span>Users</span>
+    </a>
+
+    <a href="/categories" class="sidebar-item">
+      <i class="bi bi-tags"></i>
+      <span>Kategori</span>
+    </a>
+
+    <a href="/reports" class="sidebar-item">
+      <i class="bi bi-bar-chart-line"></i>
+      <span>Laporan</span>
+    </a>
+
+    <a href="/trash" class="sidebar-item">
+      <i class="bi bi-trash3"></i>
+      <span>Trash</span>
+    </a>
+    <% } %>
+
+    <% if (role === 'karyawan') { %>
+    <div class="nav-section-title">Pengaturan</div>
+    <a href="/categories" class="sidebar-item">
+      <i class="bi bi-tags"></i>
+      <span>Kategori</span>
+    </a>
+    <% } %>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-user-avatar">
+        <%= user ? user.name.charAt(0).toUpperCase() : 'U' %>
+      </div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name"><%= user ? user.name : '' %></div>
+        <div class="sidebar-user-role"><%= role %></div>
+      </div>
+      <a href="/logout" class="sidebar-logout" title="Logout">
+        <i class="bi bi-box-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+</aside>

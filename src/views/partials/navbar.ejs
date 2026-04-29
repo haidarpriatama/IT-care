@@ -1,0 +1,14 @@
+<nav class="topbar">
+  <div class="topbar-left">
+    <div class="page-title"><%= locals.title ? locals.title.split(' - ')[0] : 'IT Care' %></div>
+    <div class="page-breadcrumb">IT Care Helpdesk System</div>
+  </div>
+  <div class="topbar-right">
+    <button class="topbar-btn" id="sidebarToggle" title="Toggle Sidebar">
+      <i class="bi bi-list"></i>
+    </button>
+    <div class="topbar-avatar" title="<%= currentUser ? currentUser.name : '' %>">
+      <%= currentUser ? currentUser.name.charAt(0).toUpperCase() : 'U' %>
+    </div>
+  </div>
+</nav>

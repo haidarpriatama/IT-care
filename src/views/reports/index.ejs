@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <meta name="description" content="Laporan tiket IT Care Helpdesk dengan analisis lengkap">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('../partials/flash') %>
+  <div class="app-layout">
+    <%- include('../partials/sidebar') %>
+    <div class="main-content">
+      <%- include('../partials/navbar') %>
+      <div class="page-content">
+
+        <div class="action-bar">
+          <div>
+            <div class="action-bar-title"><i class="bi bi-bar-chart-line" style="color:var(--accent);"></i> Laporan Helpdesk</div>
+            <div style="font-size:.8rem; color:var(--text-muted);">Data gabungan tickets · users · categories · status_logs</div>
+          </div>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="stats-grid section-gap">
+          <div class="stat-card">
+            <div class="stat-icon purple"><i class="bi bi-ticket-detailed"></i></div>
+            <div class="stat-info">
+              <div class="stat-value"><%= summary.total %></div>
+              <div class="stat-label">Total Tiket</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon blue"><i class="bi bi-envelope-open"></i></div>
+            <div class="stat-info">
+              <div class="stat-value"><%= summary.open %></div>
+              <div class="stat-label">Open</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon orange"><i class="bi bi-gear"></i></div>
+            <div class="stat-info">
+              <div class="stat-value"><%= summary.in_progress %></div>
+              <div class="stat-label">In Progress</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><i class="bi bi-check-circle"></i></div>
+            <div class="stat-info">
+              <div class="stat-value"><%= summary.resolved %></div>
+              <div class="stat-label">Selesai</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon red"><i class="bi bi-x-circle"></i></div>
+            <div class="stat-info">
+              <div class="stat-value"><%= summary.rejected %></div>
+              <div class="stat-label">Ditolak</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kategori Stats + Filter -->
+        <div style="display:grid; grid-template-columns:1fr 2fr; gap:1.5rem; margin-bottom:1.5rem; align-items:start;">
+
+          <!-- Category Stats -->
+          <div class="card-custom">
+            <div class="card-header-custom">
+              <div class="card-title-custom"><i class="bi bi-pie-chart"></i> Tiket per Kategori</div>
+            </div>
+            <div class="card-body-custom">
+              <% if (categoryStats.length === 0) { %>
+              <p class="text-muted-sm" style="text-align:center;">Belum ada data.</p>
+              <% } else { %>
+                <% const maxCount = Math.max(...categoryStats.map(c => parseInt(c.total) || 0), 1); %>
+                <% categoryStats.forEach(cs => { %>
+                <div style="margin-bottom:1rem;">
+                  <div style="display:flex; justify-content:space-between; margin-bottom:.35rem;">
+                    <span style="font-size:.82rem; font-weight:600;"><%= cs.name %></span>
+                    <span style="font-size:.82rem; color:var(--text-muted); font-weight:700;"><%= cs.total %></span>
+                  </div>
+                  <div style="background:#f1f5f9; border-radius:20px; height:6px; overflow:hidden;">
+                    <div style="background:linear-gradient(90deg,var(--accent),#7c3aed);
+                      height:100%; border-radius:20px;
+                      width:<%= Math.round((parseInt(cs.total)/maxCount)*100) %>%;
+                      transition:width .5s ease;">
+                    </div>
+                  </div>
+                </div>
+                <% }) %>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="card-custom">
+            <div class="card-header-custom">
+              <div class="card-title-custom"><i class="bi bi-funnel"></i> Filter Laporan</div>
+              <% if (filters.search || filters.status || filters.priority || filters.category_id || filters.date_from || filters.date_to) { %>
+              <a href="/reports" class="btn-secondary-custom" style="font-size:.8rem; padding:.35rem .75rem;">
+                <i class="bi bi-x-lg"></i> Reset
+              </a>
+              <% } %>
+            </div>
+            <div class="card-body-custom">
+              <form method="GET" action="/reports" id="reportFilterForm">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                  <div class="form-group">
+                    <label class="form-label-custom">Cari</label>
+                    <input type="text" name="search" class="form-control-custom"
+                      placeholder="Judul, pemohon, departemen..." value="<%= filters.search %>"
+                      id="reportSearch">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label-custom">Kategori</label>
+                    <select name="category_id" class="form-control-custom" id="catFilter">
+                      <option value="">Semua Kategori</option>
+                      <% categories.forEach(cat => { %>
+                      <option value="<%= cat.id %>" <%= filters.category_id == cat.id ? 'selected' : '' %>><%= cat.name %></option>
+                      <% }) %>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label-custom">Status</label>
+                    <select name="status" class="form-control-custom" id="reportStatus">
+                      <option value="">Semua Status</option>
+                      <option value="open" <%= filters.status === 'open' ? 'selected' : '' %>>Open</option>
+                      <option value="in_progress" <%= filters.status === 'in_progress' ? 'selected' : '' %>>In Progress</option>
+                      <option value="resolved" <%= filters.status === 'resolved' ? 'selected' : '' %>>Selesai</option>
+                      <option value="rejected" <%= filters.status === 'rejected' ? 'selected' : '' %>>Ditolak</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label-custom">Prioritas</label>
+                    <select name="priority" class="form-control-custom" id="reportPriority">
+                      <option value="">Semua Prioritas</option>
+                      <option value="high" <%= filters.priority === 'high' ? 'selected' : '' %>>Tinggi</option>
+                      <option value="medium" <%= filters.priority === 'medium' ? 'selected' : '' %>>Sedang</option>
+                      <option value="low" <%= filters.priority === 'low' ? 'selected' : '' %>>Rendah</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label-custom">Dari Tanggal</label>
+                    <input type="date" name="date_from" class="form-control-custom" value="<%= filters.date_from %>" id="dateFrom">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label-custom">Sampai Tanggal</label>
+                    <input type="date" name="date_to" class="form-control-custom" value="<%= filters.date_to %>" id="dateTo">
+                  </div>
+                </div>
+                <button type="submit" class="btn-primary-custom">
+                  <i class="bi bi-search"></i> Terapkan Filter
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reports Table (JOIN > 2 tabel) -->
+        <div class="card-custom">
+          <div class="card-header-custom">
+            <div class="card-title-custom">
+              <i class="bi bi-table"></i> Data Laporan
+              <span style="font-size:.75rem; background:var(--accent-soft); color:var(--accent); padding:.15rem .5rem; border-radius:10px; margin-left:.5rem;"><%= tickets.length %> tiket</span>
+            </div>
+            <div style="font-size:.75rem; color:var(--text-muted);">
+              <i class="bi bi-info-circle"></i> JOIN: tickets + users + categories + status_logs
+            </div>
+          </div>
+
+          <% if (tickets.length === 0) { %>
+          <div class="empty-state">
+            <i class="bi bi-bar-chart"></i>
+            <h4>Tidak ada data laporan</h4>
+            <p>Tidak ada tiket yang sesuai dengan filter yang dipilih.</p>
+          </div>
+          <% } else { %>
+          <div style="overflow-x:auto;">
+            <table class="table-custom">
+              <thead>
+                <tr>
+                  <th>#ID</th>
+                  <th>Judul Tiket</th>
+                  <th>Pemohon</th>
+                  <th>Departemen</th>
+                  <th>Kategori</th>
+                  <th>Teknisi</th>
+                  <th>Prioritas</th>
+                  <th>Status</th>
+                  <th>Status Terakhir</th>
+                  <th>Catatan</th>
+                  <th>Lokasi</th>
+                  <th>Tanggal</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% tickets.forEach(ticket => { %>
+                <tr>
+                  <td><a href="/tickets/<%= ticket.id %>" style="font-weight:700; color:var(--accent);">#<%= ticket.id %></a></td>
+                  <td>
+                    <a href="/tickets/<%= ticket.id %>" class="ticket-title" style="max-width:200px;">
+                      <%= ticket.title %>
+                    </a>
+                  </td>
+                  <td style="font-size:.85rem;"><%= ticket.requester_name %></td>
+                  <td class="text-muted-sm"><%= ticket.requester_dept || '-' %></td>
+                  <td>
+                    <% if (ticket.category_name) { %>
+                    <span style="font-size:.8rem; background:#f1f5f9; padding:.2rem .6rem; border-radius:6px; color:var(--text-muted);">
+                      <%= ticket.category_name %>
+                    </span>
+                    <% } else { %><span class="text-muted-sm">-</span><% } %>
+                  </td>
+                  <td style="font-size:.85rem;"><%= ticket.technician_name || '-' %></td>
+                  <td>
+                    <span class="badge-priority badge-<%= ticket.priority %>">
+                      <%= ticket.priority === 'high' ? 'Tinggi' : ticket.priority === 'medium' ? 'Sedang' : 'Rendah' %>
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge-status badge-<%= ticket.status %>">
+                      <%= ticket.status === 'open' ? 'Open' : ticket.status === 'in_progress' ? 'In Progress' : ticket.status === 'resolved' ? 'Selesai' : 'Ditolak' %>
+                    </span>
+                  </td>
+                  <td>
+                    <% if (ticket.last_status) { %>
+                    <span class="badge-status badge-<%= ticket.last_status %>" style="font-size:.7rem;">
+                      <%= ticket.last_status %>
+                    </span>
+                    <% } else { %><span class="text-muted-sm">-</span><% } %>
+                  </td>
+                  <td style="text-align:center;">
+                    <span style="font-weight:700; color:var(--accent); font-size:.85rem;"><%= ticket.note_count %></span>
+                  </td>
+                  <td class="text-muted-sm"><%= ticket.location || '-' %></td>
+                  <td class="text-muted-sm">
+                    <%= new Date(ticket.created_at).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' }) %>
+                  </td>
+                </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+          <% } %>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
