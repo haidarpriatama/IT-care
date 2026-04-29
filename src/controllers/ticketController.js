@@ -419,5 +419,5 @@ module.exports = {
   softDeleteTicket,
   getTrash,
   restoreTicket,
-  hardDeleteTicket,
+  hardDeleteTicket
 };
