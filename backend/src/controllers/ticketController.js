@@ -22,13 +22,12 @@ const getTickets = async (req, res) => {
     if (user.role === 'karyawan') {
       baseQuery += ` AND t.user_id = $${paramIndex++}`;
       params.push(user.id);
-    } else if (user.role === 'teknisi') {
-      baseQuery += ` AND t.technician_id = $${paramIndex++}`;
-      params.push(user.id);
     }
+    // teknisi dan admin bisa melihat semua tiket, jadi tidak perlu difilter user id atau technician id
+    // Jika ada kebutuhan filter by technician di UI, bisa gunakan parameter tambahan nanti.
 
     if (search) {
-      baseQuery += ` AND (t.title ILIKE $${paramIndex} OR t.description ILIKE $${paramIndex} OR u.name ILIKE $${paramIndex})`;
+      baseQuery += ` AND (t.title ILIKE $${paramIndex} OR t.description ILIKE $${paramIndex} OR u.name ILIKE $${paramIndex} OR t.ticket_number ILIKE $${paramIndex})`;
       params.push(`%${search}%`);
       paramIndex++;
     }
@@ -47,7 +46,7 @@ const getTickets = async (req, res) => {
 
     const dataParams = [...params, limit, offset];
     const tickets = await pool.query(
-      `SELECT t.id, t.title, t.status, t.priority, t.created_at, t.location,
+      `SELECT t.id, t.ticket_number, t.title, t.status, t.priority, t.created_at, t.location,
               u.name AS requester, c.name AS category, tech.name AS technician
        ${baseQuery}
        ORDER BY t.created_at DESC
@@ -67,15 +66,44 @@ const getTickets = async (req, res) => {
   }
 };
 
+// Helper function to generate ticket number
+const generateTicketNumber = async (categoryId, priority) => {
+  // Get category initial
+  let categoryPrefix = 'XX';
+  if (categoryId) {
+    const catResult = await pool.query('SELECT name FROM categories WHERE id = $1', [categoryId]);
+    if (catResult.rows.length > 0) {
+      const catName = catResult.rows[0].name.toUpperCase();
+      // Get first two characters of category name, or pad with X
+      categoryPrefix = (catName.replace(/[^A-Z]/g, '') + 'XX').substring(0, 2);
+    }
+  }
+
+  // Priority mapping (0: low, 1: medium, 2: high)
+  let priorityCode = '1'; // Default medium
+  if (priority === 'low') priorityCode = '0';
+  if (priority === 'high') priorityCode = '2';
+
+  // Get sequence number for today/this category
+  const countResult = await pool.query('SELECT COUNT(*) FROM tickets');
+  const nextSeq = parseInt(countResult.rows[0].count) + 1;
+  const seqPadded = nextSeq.toString().padStart(4, '0');
+
+  return `${categoryPrefix}${priorityCode}${seqPadded}`;
+};
+
 // POST /api/tickets
 const postCreateTicket = async (req, res) => {
   const user = req.session.user;
   const { category_id, title, description, location, priority } = req.body;
   try {
+    const ticketPriority = priority || 'medium';
+    const ticketNumber = await generateTicketNumber(category_id, ticketPriority);
+
     const result = await pool.query(
-      `INSERT INTO tickets (user_id, category_id, title, description, location, priority)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [user.id, category_id || null, title, description, location, priority || 'medium']
+      `INSERT INTO tickets (user_id, category_id, title, description, location, priority, ticket_number)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [user.id, category_id || null, title, description, location, ticketPriority, ticketNumber]
     );
     // Log status awal
     await pool.query(
@@ -116,10 +144,7 @@ const getTicketDetail = async (req, res) => {
     if (user.role === 'karyawan' && ticket.user_id !== user.id) {
       return res.status(403).json({ error: 'Anda tidak memiliki akses ke tiket ini.' });
     }
-    // Teknisi hanya tiket yang ditugaskan
-    if (user.role === 'teknisi' && ticket.technician_id !== user.id) {
-      return res.status(403).json({ error: 'Anda tidak memiliki akses ke tiket ini.' });
-    }
+    // Teknisi dapat melihat dan mengakses semua tiket
 
     const notes = await pool.query(`
       SELECT tn.*, u.name AS author_name, u.role AS author_role
@@ -134,10 +159,10 @@ const getTicketDetail = async (req, res) => {
       FROM status_logs sl
       LEFT JOIN users u ON sl.changed_by = u.id
       WHERE sl.ticket_id = $1
-      ORDER BY sl.created_at ASC
+      ORDER BY sl.created_at DESC
     `, [id]);
 
-    const technicians = user.role === 'admin'
+    const technicians = (user.role === 'admin' || user.role === 'teknisi')
       ? (await pool.query("SELECT id, name FROM users WHERE role='teknisi' ORDER BY name")).rows
       : [];
 
@@ -178,9 +203,6 @@ const updateTicket = async (req, res) => {
         [category_id || null, title, description, location, priority, id]
       );
     } else if (user.role === 'teknisi') {
-      if (ticket.technician_id !== user.id) {
-        return res.status(403).json({ error: 'Akses ditolak.' });
-      }
       const newStatus = status || ticket.status;
       if (newStatus !== ticket.status) {
         await pool.query(
@@ -188,9 +210,14 @@ const updateTicket = async (req, res) => {
           [id, user.id, ticket.status, newStatus]
         );
       }
+      // Automatis set technician_id jika teknisi yang merubah, atau gunakan request jika ada
+      const targetTechnician = technician_id || user.id;
       await pool.query(
-        `UPDATE tickets SET status=$1, updated_at=NOW() WHERE id=$2`,
-        [newStatus, id]
+        `UPDATE tickets SET category_id=$1, title=$2, description=$3, location=$4, priority=$5,
+                status=$6, technician_id=$7, updated_at=NOW()
+         WHERE id=$8`,
+        [category_id || null, title, description, location, priority, newStatus,
+         targetTechnician, id]
       );
     } else if (user.role === 'admin') {
       const newStatus = status || ticket.status;
@@ -200,12 +227,17 @@ const updateTicket = async (req, res) => {
           [id, user.id, ticket.status, newStatus]
         );
       }
+      // Jika admin melakukan update, biarkan teknisi yang sudah ada atau gunakan yang dikirimkan (bisa null)
+      let targetTechnician = technician_id !== undefined ? technician_id : ticket.technician_id;
+      // Jika kosongkan string (misal dari form clear), set jadi null
+      if (targetTechnician === '') targetTechnician = null;
+
       await pool.query(
         `UPDATE tickets SET category_id=$1, title=$2, description=$3, location=$4, priority=$5,
                 status=$6, admin_note=$7, technician_id=$8, updated_at=NOW()
          WHERE id=$9`,
         [category_id || null, title, description, location, priority, newStatus,
-         admin_note || null, technician_id || null, id]
+         admin_note || null, targetTechnician, id]
       );
     }
 

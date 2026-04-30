@@ -127,7 +127,7 @@ const Tickets = () => {
                 ) : (
                   tickets.map(ticket => (
                     <TableRow key={ticket.id} className="border-border group">
-                      <TableCell className="py-2.5 text-xs text-muted-foreground">#{ticket.id}</TableCell>
+                      <TableCell className="py-2.5 text-xs text-muted-foreground">{ticket.ticket_number || `#${ticket.id}`}</TableCell>
                       <TableCell className="py-2.5 font-medium max-w-[250px] truncate text-sm text-foreground" title={ticket.title}>{ticket.title}</TableCell>
                       <TableCell className="py-2.5">
                         <Badge variant={getStatusBadgeVariant(ticket.status)} className="uppercase text-[9px] tracking-wider font-semibold">

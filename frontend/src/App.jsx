@@ -39,8 +39,8 @@ const AppRoutes = () => {
         
         {/* Admin only routes */}
         <Route path="users" element={<ProtectedRoute allowedRoles={['admin']}><Users /></ProtectedRoute>} />
-        <Route path="categories" element={<ProtectedRoute allowedRoles={['admin']}><Categories /></ProtectedRoute>} />
-        <Route path="reports" element={<ProtectedRoute allowedRoles={['admin']}><Reports /></ProtectedRoute>} />
+        <Route path="categories" element={<ProtectedRoute allowedRoles={['admin', 'teknisi']}><Categories /></ProtectedRoute>} />
+        <Route path="reports" element={<ProtectedRoute allowedRoles={['admin', 'teknisi']}><Reports /></ProtectedRoute>} />
         <Route path="trash" element={<ProtectedRoute allowedRoles={['admin']}><Trash /></ProtectedRoute>} />
       </Route>
     </Routes>

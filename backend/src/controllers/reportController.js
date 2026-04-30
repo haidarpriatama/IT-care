@@ -47,7 +47,7 @@ const getReports = async (req, res) => {
       params.push(`%${search}%`);
       paramIndex++;
     }
-    if (status) {
+    if (status && status !== 'all') {
       query += ` AND t.status = $${paramIndex++}`;
       params.push(status);
     }
@@ -55,7 +55,7 @@ const getReports = async (req, res) => {
       query += ` AND t.priority = $${paramIndex++}`;
       params.push(priority);
     }
-    if (category_id) {
+    if (category_id && category_id !== 'all') {
       query += ` AND t.category_id = $${paramIndex++}`;
       params.push(category_id);
     }

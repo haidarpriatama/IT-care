@@ -28,7 +28,7 @@ const TicketDetail = () => {
       const res = await api.get(`/tickets/${id}`);
       setData(res.data);
       setStatus(res.data.ticket.status);
-      setTechnicianId(res.data.ticket.technician_id || 'unassigned');
+      setTechnicianId(res.data.ticket.technician_id ? res.data.ticket.technician_id.toString() : 'unassigned');
     } catch (err) {
       console.error(err);
       navigate('/tickets');
@@ -44,11 +44,10 @@ const TicketDetail = () => {
   const handleUpdateStatus = async () => {
     try {
       const payload = { status };
-      if (technicianId !== 'unassigned') {
-        payload.technician_id = technicianId;
-      } else {
-        payload.technician_id = null;
+      if (user?.role === 'admin') {
+        payload.technician_id = technicianId !== 'unassigned' ? technicianId : '';
       }
+      // Untuk teknisi backend akan otomatis set ke user.id atau tetap sama.
       await api.put(`/tickets/${id}`, payload);
       fetchTicket();
     } catch (err) {

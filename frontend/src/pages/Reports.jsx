@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/table";
 import { Search, RotateCcw, Filter } from 'lucide-react';
 
+import { cn } from "@/lib/utils";
+
 const Reports = () => {
   const [data, setData] = useState({ tickets: [], summary: {}, categoryStats: [], categories: [] });
   const [loading, setLoading] = useState(true);

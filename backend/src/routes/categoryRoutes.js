@@ -9,8 +9,8 @@ const {
 } = require('../controllers/categoryController');
 
 router.get('/', ensureAuthenticated, getCategories);
-router.post('/', ensureAuthenticated, authorizeRoles('admin'), postCreateCategory);
-router.put('/:id', ensureAuthenticated, authorizeRoles('admin'), updateCategory);
-router.delete('/:id', ensureAuthenticated, authorizeRoles('admin'), deleteCategory);
+router.post('/', ensureAuthenticated, authorizeRoles('admin', 'teknisi'), postCreateCategory);
+router.put('/:id', ensureAuthenticated, authorizeRoles('admin', 'teknisi'), updateCategory);
+router.delete('/:id', ensureAuthenticated, authorizeRoles('admin', 'teknisi'), deleteCategory);
 
 module.exports = router;

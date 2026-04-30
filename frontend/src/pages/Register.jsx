@@ -8,13 +8,16 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, User, Mail, Lock, Phone, Building } from 'lucide-react';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 const Register = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     phone: '',
-    department: ''
+    department: '',
+    role: 'karyawan'
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -134,19 +137,36 @@ const Register = () => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="phone" className="text-xs font-semibold text-foreground ml-0.5">Nomor Telepon</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/60" />
-                    <Input 
-                      id="phone"
-                      name="phone"
-                      placeholder="0812..."
-                      value={formData.phone} 
-                      onChange={handleChange} 
-                      disabled={isLoading}
-                      className="h-10 text-sm bg-background pl-10 border-border/60 focus:border-primary/50 transition-all rounded-lg"
-                    />
-                  </div>
+                  <Label htmlFor="role" className="text-xs font-semibold text-foreground ml-0.5">Role</Label>
+                  <Select
+                    value={formData.role}
+                    onValueChange={(val) => setFormData({ ...formData, role: val })}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger id="role" className="h-10 text-sm bg-background border-border/60 focus:border-primary/50 rounded-lg">
+                      <SelectValue placeholder="Pilih Role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="karyawan">Karyawan</SelectItem>
+                      <SelectItem value="teknisi">Teknisi</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="phone" className="text-xs font-semibold text-foreground ml-0.5">Nomor Telepon</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground/60" />
+                  <Input 
+                    id="phone"
+                    name="phone"
+                    placeholder="0812..."
+                    value={formData.phone} 
+                    onChange={handleChange} 
+                    disabled={isLoading}
+                    className="h-10 text-sm bg-background pl-10 border-border/60 focus:border-primary/50 transition-all rounded-lg"
+                  />
                 </div>
               </div>
 

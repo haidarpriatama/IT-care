@@ -56,15 +56,15 @@ const SidebarNav = ({ user, location, onClickNavItem }) => {
       <NavItem to="/" icon={LayoutDashboard}>Dashboard</NavItem>
       <NavItem to="/tickets" icon={Ticket}>Tiket</NavItem>
       
-      {user?.role === 'admin' && (
+      {(user?.role === 'admin' || user?.role === 'teknisi') && (
         <div className="mt-6">
           <div className="px-3 mb-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-            Admin Area
+            {user?.role === 'admin' ? 'Admin Area' : 'Technician Area'}
           </div>
           <NavItem to="/reports" icon={FileBarChart}>Laporan</NavItem>
-          <NavItem to="/users" icon={Users}>Users</NavItem>
+          {user?.role === 'admin' && <NavItem to="/users" icon={Users}>Users</NavItem>}
           <NavItem to="/categories" icon={FolderOpen}>Kategori</NavItem>
-          <NavItem to="/trash" icon={Trash2}>Trash</NavItem>
+          {user?.role === 'admin' && <NavItem to="/trash" icon={Trash2}>Trash</NavItem>}
         </div>
       )}
     </div>

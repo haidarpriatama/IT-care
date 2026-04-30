@@ -34,7 +34,7 @@ const getDashboard = async (req, res) => {
 
       // Recent tickets
       const result = await pool.query(`
-        SELECT t.id, t.title, t.status, t.priority, t.created_at,
+        SELECT t.id, t.ticket_number, t.title, t.status, t.priority, t.created_at,
                u.name AS requester, c.name AS category,
                tech.name AS technician
         FROM tickets t
@@ -61,14 +61,14 @@ const getDashboard = async (req, res) => {
       };
 
       const result = await pool.query(`
-        SELECT t.id, t.title, t.status, t.priority, t.created_at,
+        SELECT t.id, t.ticket_number, t.title, t.status, t.priority, t.created_at,
                u.name AS requester, c.name AS category
         FROM tickets t
         LEFT JOIN users u ON t.user_id = u.id
         LEFT JOIN categories c ON t.category_id = c.id
-        WHERE t.technician_id = $1 AND t.deleted_at IS NULL
+        WHERE t.deleted_at IS NULL
         ORDER BY t.created_at DESC LIMIT 8
-      `, [user.id]);
+      `);
       recentTickets = result.rows;
 
     } else {
@@ -86,7 +86,7 @@ const getDashboard = async (req, res) => {
       };
 
       const result = await pool.query(`
-        SELECT t.id, t.title, t.status, t.priority, t.created_at,
+        SELECT t.id, t.ticket_number, t.title, t.status, t.priority, t.created_at,
                c.name AS category, tech.name AS technician
         FROM tickets t
         LEFT JOIN categories c ON t.category_id = c.id

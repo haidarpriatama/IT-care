@@ -80,35 +80,7 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Analytics Chart Placeholder */}
-      <Card className="border-border shadow-sm rounded-xl overflow-hidden">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-base font-semibold">Aktivitas Tiket</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[200px] w-full flex items-end justify-between gap-2 border-b border-l border-border/50 pb-2 px-2 relative">
-            {/* Y-axis labels placeholder */}
-            <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-[10px] text-muted-foreground py-2 -ml-6">
-              <span>100</span>
-              <span>50</span>
-              <span>0</span>
-            </div>
-            
-            {/* Mock Bars */}
-            {[40, 70, 45, 90, 65, 85, 30, 50, 75, 100, 55, 80].map((h, i) => (
-              <div key={i} className="w-full bg-primary/20 hover:bg-primary/40 rounded-t-sm transition-all relative group" style={{ height: `${h}%` }}>
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[10px] px-2 py-1 rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                  {h}
-                </div>
-              </div>
-            ))}
-          </div>
-          {/* X-axis labels placeholder */}
-          <div className="flex justify-between mt-2 text-[10px] text-muted-foreground px-2">
-            <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Analytics Chart Placeholder (Removed) */}
 
       {/* Data Table Section */}
       <Card className="border-border shadow-sm rounded-xl overflow-hidden">
@@ -158,7 +130,14 @@ const Dashboard = () => {
                     ) : (
                       recentTickets.map(ticket => (
                         <TableRow key={ticket.id} className="border-border">
-                          <TableCell className="py-2.5 font-medium max-w-[200px] truncate text-sm text-foreground" title={ticket.title}>{ticket.title}</TableCell>
+                          <TableCell className="py-2.5">
+                            <div className="font-semibold text-primary text-xs mb-1">
+                               {ticket.ticket_number || `#${ticket.id}`}
+                            </div>
+                            <div className="font-medium max-w-[200px] truncate text-sm text-foreground" title={ticket.title}>
+                               {ticket.title}
+                            </div>
+                          </TableCell>
                           <TableCell className="py-2.5">
                             <Badge variant={getStatusBadgeVariant(ticket.status)} className="uppercase text-[9px] tracking-wider font-semibold">
                               {ticket.status}
