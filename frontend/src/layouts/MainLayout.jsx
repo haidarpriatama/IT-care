@@ -115,9 +115,7 @@ const MainLayout = () => {
       <aside className="hidden md:flex flex-col w-[240px] bg-sidebar border-r border-border flex-shrink-0">
         <div className="flex items-center h-14 px-4 border-b border-border">
           <Link to="/" className="flex items-center gap-2 font-bold text-base text-sidebar-foreground">
-            <div className="w-6 h-6 rounded bg-primary flex items-center justify-center text-primary-foreground text-xs">
-              IT
-            </div>
+            <img src="/icon.png" alt="IT Care" className="w-6 h-6 rounded object-contain" />
             IT Care
           </Link>
         </div>
@@ -185,9 +183,7 @@ const MainLayout = () => {
                 <SheetTitle className="sr-only">Menu Navigasi</SheetTitle>
                 <div className="flex items-center h-14 px-4 border-b border-border">
                   <span className="font-bold text-base text-sidebar-foreground flex items-center gap-2">
-                    <div className="w-6 h-6 rounded bg-primary flex items-center justify-center text-primary-foreground text-xs">
-                      IT
-                    </div>
+                    <img src="/icon.png" alt="IT Care" className="w-6 h-6 rounded object-contain" />
                     IT Care
                   </span>
                 </div>
