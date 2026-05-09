@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
 import { useAuth } from '@/utils/AuthContext';
 import { Trash2, ArrowLeft, Send } from 'lucide-react';
@@ -98,8 +98,8 @@ const TicketDetail = () => {
     <div className="space-y-6 max-w-6xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" asChild>
-            <Link to="/tickets"><ArrowLeft className="h-4 w-4" /></Link>
+          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
             <h2 className="text-2xl font-semibold tracking-tight">#{ticket.id} - {ticket.title}</h2>
@@ -222,7 +222,7 @@ const TicketDetail = () => {
                 <div className="text-sm font-medium">{ticket.technician_name || 'Belum ditugaskan'}</div>
               </div>
               
-              {(user?.role === 'admin' || user?.role === 'teknisi') && (
+              {(user?.role === 'admin' || (user?.role === 'teknisi' && Number(ticket.technician_id) === Number(user?.id))) && (
                 <div className="pt-4 border-t border-border space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="status">Ubah Status</Label>

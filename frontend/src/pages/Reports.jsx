@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,12 +15,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Search, RotateCcw, Filter } from 'lucide-react';
+import { useAuth } from '@/utils/AuthContext';
 
 import { cn } from "@/lib/utils";
 
 const Reports = () => {
-  const [data, setData] = useState({ tickets: [], summary: {}, categoryStats: [], categories: [] });
+  const { user } = useAuth();
+  const [data, setData] = useState({ tickets: [], summary: {}, categoryStats: [], categories: [], technicians: [] });
   const [loading, setLoading] = useState(true);
+  const [assignLoadingId, setAssignLoadingId] = useState(null);
   const [filters, setFilters] = useState({
     search: '', status: '', priority: '', category_id: '', date_from: '', date_to: ''
   });
@@ -51,7 +55,33 @@ const Reports = () => {
     setTimeout(() => fetchReports(), 0);
   };
 
-  const { tickets, summary, categories } = data;
+  const { tickets, summary, categories, technicians } = data;
+
+  const handleAssignTechnician = async (ticketId, value) => {
+    try {
+      setAssignLoadingId(ticketId);
+      await api.put(`/tickets/${ticketId}`, {
+        technician_id: value === 'unassigned' ? '' : value,
+      });
+      setData(prev => ({
+        ...prev,
+        tickets: prev.tickets.map(ticket => {
+          if (ticket.id !== ticketId) return ticket;
+          const selectedTech = technicians.find(tech => tech.id.toString() === value);
+          return {
+            ...ticket,
+            technician_id: value === 'unassigned' ? null : Number(value),
+            technician_name: value === 'unassigned' ? null : (selectedTech?.name || ticket.technician_name),
+          };
+        }),
+      }));
+    } catch (err) {
+      console.error(err);
+      alert('Gagal assign teknisi');
+    } finally {
+      setAssignLoadingId(null);
+    }
+  };
 
   const getStatusBadgeVariant = (status) => {
     switch (status) {
@@ -157,18 +187,19 @@ const Reports = () => {
                 <TableHead className="h-9 py-2 text-xs font-medium">Pemohon</TableHead>
                 <TableHead className="h-9 py-2 text-xs font-medium">Teknisi</TableHead>
                 <TableHead className="h-9 py-2 text-xs font-medium">Tanggal</TableHead>
+                <TableHead className="h-9 py-2 text-xs font-medium text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground text-sm">
+                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground text-sm">
                     Memuat laporan...
                   </TableCell>
                 </TableRow>
               ) : (!Array.isArray(tickets) || tickets.length === 0) ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground text-sm">
+                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground text-sm">
                     Data tidak ditemukan
                   </TableCell>
                 </TableRow>
@@ -193,9 +224,52 @@ const Reports = () => {
                         <span className="text-[10px] text-muted-foreground uppercase">{t.requester_dept || '-'}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="py-2.5 text-xs text-muted-foreground">{t.technician_name || '-'}</TableCell>
+                    <TableCell className="py-2.5">
+                      {user?.role === 'admin' ? (
+                        <Select
+                          value={t.technician_id ? t.technician_id.toString() : 'unassigned'}
+                          onValueChange={(value) => handleAssignTechnician(t.id, value)}
+                          disabled={assignLoadingId === t.id}
+                        >
+                          <SelectTrigger className={cn(
+                            "h-auto w-auto border-0 bg-transparent px-0 py-0 text-xs shadow-none focus:ring-0 focus:ring-offset-0",
+                            !t.technician_id ? "text-amber-600 font-semibold" : "text-muted-foreground"
+                          )}>
+                            <SelectValue placeholder="Belum ditugaskan" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="unassigned">Belum ditugaskan</SelectItem>
+                            {technicians.map(tech => (
+                              <SelectItem key={tech.id} value={tech.id.toString()}>{tech.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : user?.role === 'teknisi' && !t.technician_id ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto px-0 py-0 text-xs font-semibold text-blue-600 hover:bg-transparent hover:text-blue-700"
+                          onClick={() => handleAssignTechnician(t.id, user.id.toString())}
+                          disabled={assignLoadingId === t.id}
+                        >
+                          Ambil tiket
+                        </Button>
+                      ) : (
+                        <span className={cn(
+                          "text-xs",
+                          Number(t.technician_id) === Number(user?.id)
+                            ? "font-bold text-foreground"
+                            : "text-muted-foreground"
+                        )}>{t.technician_name || '-'}</span>
+                      )}
+                    </TableCell>
                     <TableCell className="py-2.5 text-xs text-muted-foreground whitespace-nowrap">
                       {new Date(t.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </TableCell>
+                    <TableCell className="py-2.5 text-right">
+                      <Button variant="ghost" size="sm" asChild className="h-7 text-xs px-2 hover:bg-muted">
+                        <Link to={`/tickets/${t.id}`}>Detail</Link>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))

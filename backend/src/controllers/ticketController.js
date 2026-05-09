@@ -213,6 +213,13 @@ const updateTicket = async (req, res) => {
         [effectiveCategoryId, effectiveTitle, effectiveDescription, effectiveLocation, effectivePriority, id]
       );
     } else if (user.role === 'teknisi') {
+      const requestedTechnicianId = technician_id !== undefined && technician_id !== '' ? Number(technician_id) : null;
+      const isSelfAssignRequest = !ticket.technician_id && requestedTechnicianId === user.id;
+
+      if (ticket.technician_id !== user.id && !isSelfAssignRequest) {
+        return res.status(403).json({ error: 'Anda hanya bisa update tiket yang ditugaskan ke Anda.' });
+      }
+
       const newStatus = status || ticket.status;
       if (newStatus !== ticket.status) {
         await pool.query(
@@ -220,8 +227,8 @@ const updateTicket = async (req, res) => {
           [id, user.id, ticket.status, newStatus]
         );
       }
-      // Automatis set technician_id jika teknisi yang merubah, atau gunakan request jika ada
-      const targetTechnician = technician_id || user.id;
+
+      const targetTechnician = user.id;
       await pool.query(
         `UPDATE tickets SET category_id=$1, title=$2, description=$3, location=$4, priority=$5,
                 status=$6, technician_id=$7, updated_at=NOW()

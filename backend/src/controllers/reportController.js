@@ -22,6 +22,7 @@ const getReports = async (req, res) => {
         t.status,
         t.priority,
         t.location,
+        t.technician_id,
         t.created_at,
         t.updated_at,
         u.name       AS requester_name,
@@ -93,12 +94,14 @@ const getReports = async (req, res) => {
     `);
 
     const categories = await pool.query('SELECT * FROM categories ORDER BY name');
+    const technicians = await pool.query("SELECT id, name FROM users WHERE role='teknisi' ORDER BY name");
 
     res.json({
       tickets: result.rows,
       summary: summaryResult.rows[0],
       categoryStats: categoryStats.rows,
       categories: categories.rows,
+      technicians: technicians.rows,
       filters: { search, status, priority, category_id, date_from, date_to },
     });
   } catch (err) {
