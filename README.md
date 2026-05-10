@@ -1,6 +1,6 @@
 # IT Care
 
-**IT Care** adalah aplikasi helpdesk internal untuk pengelolaan keluhan IT karyawan. Aplikasi ini dibangun menggunakan Node.js, Express.js, PostgreSQL, EJS, dan Bootstrap.
+**IT Care** adalah aplikasi helpdesk internal untuk pengelolaan keluhan IT karyawan. Aplikasi ini dibangun menggunakan Node.js, Express.js, PostgreSQL, React, dan Tailwind CSS.
 
 ## Anggota Kelompok
 
