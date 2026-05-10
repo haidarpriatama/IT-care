@@ -100,7 +100,7 @@ const getDashboard = async (req, res) => {
     res.json({ stats, recentTickets });
   } catch (err) {
     console.error('Dashboard error:', err);
-    res.status(500).json({ error: 'Gagal untuk memuat dashboard.' });
+    res.status(500).json({ error: 'Gagal memuat dashboard.' });
   }
 };
 
