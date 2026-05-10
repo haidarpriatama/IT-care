@@ -3,6 +3,7 @@
 **IT Care** adalah aplikasi helpdesk internal untuk pengelolaan keluhan IT karyawan. Aplikasi ini dibangun menggunakan Node.js, Express.js, PostgreSQL, EJS, dan Bootstrap.
 
 ## Anggota Kelompok
+
 ### Kelompok 37
 - SANDRIYA RINDY CAHYANI (21120124120026)
 - HAIDAR RAFI APTA PRIATAMA (21120124140107)
@@ -17,15 +18,27 @@
 
 ## Tech Stack
 
+### Frontend:
+
+- React
+- Vite
+- React Router
+- Tailwind CSS
+- Radix UI
+- Lucide React
+- Axios
+
+### Backend:
+
 - Node.js
 - Express.js
-- PostgreSQL / Neon
-- EJS
-- Bootstrap 5
-- bcrypt
-- express-session
-- connect-pg-simple
-- pg
+- PostgreSQL
+- Express Session
+- Connect-PG-Simple
+- Bcrypt
+- CORS
+- Dotenv
+- Nodemon
 
 ## Prerequisites
 
