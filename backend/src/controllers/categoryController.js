@@ -48,7 +48,7 @@ const updateCategory = async (req, res) => {
       [name, description || null, id]
     );
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Kategori tidak ditemukan.' });
+      return res.status(404).json({ error: 'Kategori tidak dapat ditemukan.' });
     }
     res.json({ message: 'Kategori berhasil diperbarui.', category: result.rows[0] });
   } catch (err) {
